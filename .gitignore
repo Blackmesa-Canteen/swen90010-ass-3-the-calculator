@@ -1,0 +1,11 @@
+# Apple dir
+.DS_Store
+
+# Object file
+*.o
+
+# Ada Library Information
+*.ali
+
+# Compiled main
+main
