@@ -8,18 +8,33 @@ package body MyStringTokeniser with SPARK_Mode is
       Extent : TokenExtent;
       OutIndex : Integer := Tokens'First;
    begin
+      -- count for valid tokens
       Count := 0;
+      -- ignore errornous string
       if (S'First > S'Last) then
          return;
       end if;
+
+      -- Pointer to the first character of the string
       Index := S'First;
+
+      -- traverse within the String
       while OutIndex <= Tokens'Last and Index <= S'Last and Count < Tokens'Length loop
+         -- Loop_Invariant 1:
+         -- Guarantee the correct state: During the loop, all tokens in the output Tokens array
+         -- should be valid, i.e. the start index should be within the range of the input string,
+         -- and if the length is greater than 0, the end index should also be within the range.
          pragma Loop_Invariant
            (for all J in Tokens'First..OutIndex-1 =>
               (Tokens(J).Start >= S'First and
                    Tokens(J).Length > 0) and then
             Tokens(J).Length-1 <= S'Last - Tokens(J).Start);
 
+         -- Loop_Invariant 2:
+         -- Guarantee the correct state: The output Tokens array's index should always be
+         -- the initial value plus the count number of valid tokens, i.e. guarantee 
+         -- OutIndex always point to the end of the output Token array. So that to avoid
+         -- result overwrites and index overflow.
          pragma Loop_Invariant (OutIndex = Tokens'First + Count);
 
          -- look for start of next token
