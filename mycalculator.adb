@@ -12,8 +12,8 @@ package body MyCalculator with SPARK_Mode is
         end if;
         C.MasterPIN := PIN.From_String(MasterPINString);
 
-        -- default size
-        C.size := 512;
+        -- point to stack bottom
+        C.size := 0;
         -- init stack array
         C.storage := (others => Default_Item);
 
