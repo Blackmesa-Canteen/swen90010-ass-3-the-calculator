@@ -73,6 +73,11 @@ package body MyCalculator with SPARK_Mode is
                 NumIn := 0;
             end if;
 
+            -- check whether the stack is full
+            if (C.size >= Max_Size) then
+                raise Stack_Exception with "Stack is full.";
+            end if;
+
             C.size := C.size + 1;
             C.storage(C.size) := NumIn;
         end if;
@@ -85,8 +90,13 @@ package body MyCalculator with SPARK_Mode is
         if (C.isLocked = True) then
             raise Lock_Exception with "Calculator is locked.";
         else
+            -- check whether the stack is empty
+            if (C.size < 0) then
+                raise Stack_Exception with "Stack is empty.";  
+            end if;
+
             NumOut := C.storage(C.size);
-            C.size := C.size - 1;
+            C.size := C.size - 1;   
         end if;
     end PopNumber;
 
