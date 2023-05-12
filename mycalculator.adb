@@ -277,7 +277,6 @@ package body MyCalculator with SPARK_Mode is
                     raise Var_Exception with "Variable does not exist.";
                 else
                     -- remove the variable
-                    V := VariableStore.From_String(VarString);
                     VariableStore.Remove(C.variableDB, V);
                 end if;
             end;
