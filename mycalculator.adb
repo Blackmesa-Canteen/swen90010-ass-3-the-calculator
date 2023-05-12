@@ -91,7 +91,7 @@ package body MyCalculator with SPARK_Mode is
             raise Lock_Exception with "Calculator is locked.";
         else
             -- check whether the stack is empty
-            if (C.size < 0) then
+            if (C.size <= 0) then
                 raise Stack_Exception with "Stack is empty.";  
             end if;
 
