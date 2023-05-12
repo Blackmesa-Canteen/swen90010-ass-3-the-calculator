@@ -222,7 +222,7 @@ package body MyCalculator with SPARK_Mode is
 
     -- For a string var, the procedure loads the value stored 
     -- in variable var and pushes it onto the stack.
-    procedure LoadVar(C : in out MyCalculator; VarString: in String) is
+    procedure LoadVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable) is
     begin
         -- check lock state
         if (C.isLocked = True) then
@@ -244,6 +244,7 @@ package body MyCalculator with SPARK_Mode is
                 else
                     -- If exist, push the value onto the stack
                     Num := VariableStore.Get(C.variableDB, V);
+                    Var := V;
                     PushNumber(C, Num);
                 end if;
             end;
@@ -253,7 +254,7 @@ package body MyCalculator with SPARK_Mode is
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
-    procedure StoreVar(C : in out MyCalculator; VarString: in String) is
+    procedure StoreVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable) is
     begin
         -- check lock state
         if (C.isLocked = True) then
@@ -273,13 +274,14 @@ package body MyCalculator with SPARK_Mode is
 
                 -- store the value into variable var
                 V := VariableStore.From_String(VarString);
+                Var := V;
                 VariableStore.Put(C.variableDB, V, Num);
             end;
         end if;
     end StoreVar;
 
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
-    procedure RemoveVar(C : in out MyCalculator; VarString: String) is 
+    procedure RemoveVar(C : in out MyCalculator; VarString: String; Var : out VariableStore.Variable) is 
     begin
         -- check lock state
         if (C.isLocked = True) then
@@ -295,6 +297,7 @@ package body MyCalculator with SPARK_Mode is
             begin
                 -- check whether the variable exists
                 V := VariableStore.From_String(VarString);
+                Var := V;
                 if not VariableStore.Has_Variable(C.variableDB, V) then
                     raise MyExceptions.Var_Exception with "Variable does not exist.";
                 else

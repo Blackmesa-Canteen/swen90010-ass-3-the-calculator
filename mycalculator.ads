@@ -48,14 +48,14 @@ package MyCalculator with SPARK_Mode is
 
     -- For a string var, the procedure loads the value stored 
     -- in variable var and pushes it onto the stack.
-    procedure LoadVar(C : in out MyCalculator; VarString: in String);
+    procedure LoadVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable);
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
-    procedure StoreVar(C : in out MyCalculator; VarString: in String);
+    procedure StoreVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable);
 
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
-    procedure RemoveVar(C : in out MyCalculator; VarString: String);
+    procedure RemoveVar(C : in out MyCalculator; VarString: String; Var : out VariableStore.Variable);
 
     -- prints out all currently defined variables and their corresponding values.
     procedure List(C : in MyCalculator);
