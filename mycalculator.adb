@@ -165,7 +165,7 @@ package body MyCalculator with SPARK_Mode is
                         end if;
 
                         NumOut := Num1 + Num2;
-                        PushNumber(C, Num1 + Num2);
+                        PushNumber(C, NumOut);
                     when "-" =>
                         -- check subtraction positive overflow
                         if (not IsNum2Possitive and Num1 > Max_Integer + Num2) then
@@ -178,7 +178,7 @@ package body MyCalculator with SPARK_Mode is
                         end if;
 
                         NumOut := Num1 - Num2;
-                        PushNumber(C, Num1 - Num2);
+                        PushNumber(C, NumOut);
                     when "*" =>
                         -- check multiplication possitive overflow
                         if (IsProductPossitive and Num1 > Max_Integer / Num2) then
@@ -191,7 +191,7 @@ package body MyCalculator with SPARK_Mode is
                         end if;
 
                         NumOut := Num1 * Num2;
-                        PushNumber(C, Num1 * Num2);
+                        PushNumber(C, NumOut);
                     when "/" =>
                         -- check divide 0
                         if (Num2 = 0) then
@@ -204,7 +204,7 @@ package body MyCalculator with SPARK_Mode is
                         end if;
 
                         NumOut := Num1 / Num2;
-                        PushNumber(C, Num1 / Num2);
+                        PushNumber(C, NumOut);
                 end case; 
 
             -- If calc exception is raised, then push the number back
