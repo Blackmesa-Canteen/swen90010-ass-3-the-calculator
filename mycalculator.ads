@@ -1,5 +1,6 @@
 with VariableStore;
 with PIN;
+with MyExceptions;
 
 generic
     Max_Size : Positive;
@@ -18,10 +19,10 @@ package MyCalculator with SPARK_Mode is
     procedure Unlock(C : in out MyCalculator; PINString : in String);
 
     -- lock and update the master pin.
-    procedure lock(C : in out MyCalculator; PINString : in String);
+    procedure Lock(C : in out MyCalculator; PINString : in String);
 
     -- check if the calculator is locked or not
-    function GetLockState(C : in MyCalculator) return Boolean;
+    function IsLocked(C : in MyCalculator) return Boolean;
 
     -- get the size of the stack
     function Size(C : in MyCalculator) return Integer;
@@ -47,17 +48,17 @@ package MyCalculator with SPARK_Mode is
 
     -- For a string var, the procedure loads the value stored 
     -- in variable var and pushes it onto the stack.
-    procedure loadVar(C : in out MyCalculator; VarString: in String);
+    procedure LoadVar(C : in out MyCalculator; VarString: in String);
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
-    procedure storeVar(C : in out MyCalculator; VarString: in String);
+    procedure StoreVar(C : in out MyCalculator; VarString: in String);
 
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
-    procedure removeVar(C : in out MyCalculator; VarString: String);
+    procedure RemoveVar(C : in out MyCalculator; VarString: String);
 
     -- prints out all currently defined variables and their corresponding values.
-    procedure list(C : in MyCalculator);
+    procedure List(C : in MyCalculator);
 
 
 private

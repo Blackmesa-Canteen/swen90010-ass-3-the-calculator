@@ -8,10 +8,82 @@ with MyStringTokeniser;
 with PIN;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+with MyExceptions;
+with MyCalculator;
+with Ada.Exceptions;  use Ada.Exceptions;
 
 with Ada.Long_Long_Integer_Text_IO;
 
 procedure Main is
+   package MyCalculator is new MyCalculator(512, Integer, 0);
+   C : MyCalculator.Calculator;
+   package Lines is new MyString(Max_MyString_Length => 2048);
+   S  : Lines.MyString;
+   LOCKED_PREFIX : constant String := "locked> ";
+   UNLOCKED_PREFIX : constant String := "unlocked> ";
+begin
+
+   -- check runtime arguments
+   if ( MyCommandLine.Argument_Count /= 1 ) then
+      Put_Line("Usage: "); 
+      Put(MyCommandLine.Command_Name); 
+      Put_Line(" <PIN>");
+      exit;
+   end if;
+
+   -- init the calculator with the PIN from the command line
+   MyCalculator.Init(C, MyCommandLine.Argument(1));
+
+   -- the main loop of the calculator
+   loop
+   begin
+      -- print the prefix
+      if MyCalculator.IsLocked(C) then
+         Put(LOCKED_PREFIX);
+      else
+         Put(UNLOCKED_PREFIX);
+      end if;
+
+      -- TODO read a line of input
+      Lines.Get_Line(S);
+      -- TODO validate input
+      if Lines.Length(S) > 2048 then
+         raise MyExceptions.Syntex_Exception with "Input too long";
+      end if;
+
+      -- TODO check empty input
+
+      -- TODO execute calculator based on input
+
+      -- TODO print the result
+
+
+   -- deal with exceptions
+   exception
+
+      -- deal with non-major exceptions without exit system
+      when E : MyExceptions.Lock_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.PIN_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Operator_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Calc_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Var_Exception =>
+         Put_Line(Exception_Message (E));
+
+      -- deal with major exceptions with exiting system
+      when E : others =>
+         Put_Line(Exception_Message (E));
+         exit;
+   end;
+   end loop;
+
+
+end Main;
+
+procedure Backup_Main is
    DB : VariableStore.Database;
    V1 : VariableStore.Variable := VariableStore.From_String("Var1");
    PIN1  : PIN.PIN := PIN.From_String("1234");
@@ -94,4 +166,4 @@ begin
    Put(StringToInteger.From_String("2147483648")); New_Line;
    
       
-end Main;
+end Backup_Main;
