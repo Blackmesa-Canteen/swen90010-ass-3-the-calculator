@@ -164,7 +164,8 @@ package body MyCalculator with SPARK_Mode is
                             raise MyExceptions.Calc_Exception with "Addition overflow.";
                         end if;
 
-                        PushNumber(C, NumOut + NumOut);
+                        NumOut := Num1 + Num2;
+                        PushNumber(C, Num1 + Num2);
                     when "-" =>
                         -- check subtraction positive overflow
                         if (not IsNum2Possitive and Num1 > Max_Integer + Num2) then
@@ -176,7 +177,8 @@ package body MyCalculator with SPARK_Mode is
                             raise MyExceptions.Calc_Exception with "Subtraction overflow.";
                         end if;
 
-                        PushNumber(C, NumOut - NumOut);
+                        NumOut := Num1 - Num2;
+                        PushNumber(C, Num1 - Num2);
                     when "*" =>
                         -- check multiplication possitive overflow
                         if (IsProductPossitive and Num1 > Max_Integer / Num2) then
@@ -188,7 +190,8 @@ package body MyCalculator with SPARK_Mode is
                             raise MyExceptions.Calc_Exception with "Multiplication overflow.";
                         end if;
 
-                        PushNumber(C, NumOut * NumOut);
+                        NumOut := Num1 * Num2;
+                        PushNumber(C, Num1 * Num2);
                     when "/" =>
                         -- check divide 0
                         if (Num2 = 0) then
@@ -200,6 +203,7 @@ package body MyCalculator with SPARK_Mode is
                             raise MyExceptions.Calc_Exception with "Division overflow.";
                         end if;
 
+                        NumOut := Num1 / Num2;
                         PushNumber(C, Num1 / Num2);
                 end case; 
 
@@ -208,6 +212,7 @@ package body MyCalculator with SPARK_Mode is
                 when MyExceptions.Calc_Exception =>
                     PushNumber(C, Num2);
                     PushNumber(C, Num1);
+                    NumOut := 0;
                     -- continuing throw up the exception
                     raise;
             end;      
