@@ -1,4 +1,5 @@
 with VariableStore;
+with PIN;
 
 generic
     Max_Size : Positive;
@@ -8,9 +9,11 @@ generic
 package MyCalculator with SPARK_Mode is
     type MyCalculator is private;
 
-    procedure Init(C : out MyCalculator; MasterPIN : in String);
+    procedure Init(C : out MyCalculator; MasterPINString : in String);
 
-    function TryUnlockByPIN(C : in out MyCalculator; PIN : in String) return Boolean;
+    procedure Unlock(C : in out MyCalculator; PINString : in String);
+
+    procedure lock(C : in out MyCalculator; PINString : in String);
 
     function GetLockState(C : in MyCalculator) return Boolean;
 
@@ -54,9 +57,9 @@ private
     type StorageArray is array (Integer range 1..Max_Size) of Item;
     type MyCalculator is record
         isLocked : Boolean := False;
-        masterPin : String;
+        masterPin : PIN.PIN;
         storage : StorageArray;
-        size : Integer range 0..Max_Size;
+        size : Integer range 0..Max_Size := 512;
         variableDB : VariableStore.Database;
         end record;
 
@@ -68,5 +71,18 @@ private
 
     function GetLockState(C : in MyCalculator) return Boolean is
         (C.isLocked);
+
+    function IsNumber (S:String) return Boolean is
+        (for all I in S'Range => 
+            S(I) >= '0' and S(I) <= '9');
+   
+    function IsPin (S : String) return Boolean is
+        (S'Length = 4 and IsNumber(S));
+
+    function IsValidInt(V : Item) return Boolean is
+        (V  >= Integer'First and V <= Integer'Last);
+
+    function IsValidOperator(S : String) return Boolean is
+        (S = "+" or S = "-" or S = "*" or S = "/");
 
 end MyCalculator;
