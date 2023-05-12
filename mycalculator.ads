@@ -54,7 +54,7 @@ private
     type StorageArray is array (Integer range 1..Max_Size) of Item;
     type MyCalculator is record
         isLocked : Boolean := False;
-        pin : String;
+        masterPin : String;
         storage : StorageArray;
         size : Integer range 0..Max_Size;
         variableDB : VariableStore.Database;
