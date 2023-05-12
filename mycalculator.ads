@@ -66,7 +66,7 @@ private
         isLocked : Boolean := False;
         masterPin : PIN.PIN;
         storage : StorageArray;
-        size : Integer range 0..Max_Size := 512;
+        size : Integer range 0..Max_Size;
         variableDB : VariableStore.Database;
         end record;
 
