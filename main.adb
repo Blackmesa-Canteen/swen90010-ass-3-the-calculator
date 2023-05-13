@@ -21,7 +21,8 @@ procedure Main is
    MAX_LINE_LENGTH : constant Positive := 2048;
    LOCKED_PREFIX : constant String := "locked> ";
    UNLOCKED_PREFIX : constant String := "unlocked> ";
-   package CC is new MyCalculator(MAX_STACK_SIZE, Integer, 0);
+   type Commands is (push, pop, load, store, remove, lock, unlock, list);
+   package CC is new MyCalculator(MAX_STACK_SIZE);
    C : CC.MyCalculator;
    package Lines is new MyString(Max_MyString_Length => MAX_LINE_LENGTH + 1);
    S  : Lines.MyString;
@@ -100,9 +101,9 @@ begin
             if (CC.IsLocked(C)) then
                raise MyExceptions.Lock_Exception with "Calculator is locked!";
             else
-               case CommandString is
+               case Commands'Value(CommandString) is
                   -- pop and show the number
-                  when "pop" =>
+                  when pop =>
                      declare
                         NumOut : Integer;
                      begin
@@ -114,8 +115,8 @@ begin
                      end if;
                      end;
                   -- list the variable storage
-                  when  "list" =>
-                     CC.ListVariables(C);
+                  when list =>
+                     CC.List(C);
 
                   -- other undefined command
                   when others =>
@@ -159,9 +160,9 @@ begin
                if (CC.IsLocked(C)) then
                   raise MyExceptions.Lock_Exception with "Calculator is locked!";
                else
-                  case CommandString is
+                  case Commands'Value(CommandString) is
                      -- push the number
-                     when "push" =>
+                     when push =>
                         declare
                            NumIn : Integer;
                         begin
@@ -176,7 +177,7 @@ begin
                         end;
 
                      -- load the variable
-                     when "load" =>
+                     when load =>
                         declare
                            VarOut : VariableStore.Variable;
                         begin
@@ -189,7 +190,7 @@ begin
                         end;
                         
                      -- store the variable
-                     when "store" =>
+                     when store =>
                         declare
                            VarOut : VariableStore.Variable;
                         begin
@@ -202,7 +203,7 @@ begin
                         end;
 
                      -- remove the variable
-                     when "remove" =>
+                     when remove =>
                         declare
                            VarOut : VariableStore.Variable;
                         begin

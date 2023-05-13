@@ -15,11 +15,10 @@ package body MyCalculator with SPARK_Mode is
         -- point to stack bottom
         C.size := 0;
         -- init stack array
-        C.storage := (others => Default_Item);
+        C.storage := (others => 0);
 
         -- init variable storage
-        C.variableDB := VariableStore.Database;
-        VariableStore.Init(C.variableDB);
+        VariableStore.Init(C.VariableDB);
 
     end Init;
 
@@ -146,9 +145,8 @@ package body MyCalculator with SPARK_Mode is
                                       (not IsNum1Possitive and not IsNum2Possitive);
 
                  -- compute the corresponding arithmetic operation on them
-                case Operator is
-                    when "+" =>
-                        -- check addition overflow
+                if Operator = "+" then
+                     -- check addition overflow
                         Temp_R := Long_Long_Integer(num1) + Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
@@ -167,8 +165,8 @@ package body MyCalculator with SPARK_Mode is
 
                         NumOut := Num1 + Num2;
                         PushNumber(C, NumOut);
-                    when "-" =>
-                        -- check substraction overflow
+                elsif Operator = "-" then
+                    -- check substraction overflow
                         Temp_R := Long_Long_Integer(num1) - Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
@@ -187,8 +185,8 @@ package body MyCalculator with SPARK_Mode is
 
                         NumOut := Num1 - Num2;
                         PushNumber(C, NumOut);
-                    when "*" =>
-                        -- check multiplication overflow
+                elsif Operator = "*" then
+                    -- check multiplication overflow
                         Temp_R := Long_Long_Integer(num1) * Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
@@ -207,8 +205,9 @@ package body MyCalculator with SPARK_Mode is
 
                         NumOut := Num1 * Num2;
                         PushNumber(C, NumOut);
-                    when "/" =>
-                        -- check divide 0
+
+                elsif Operator = "/" then
+                    -- check divide 0
                         if (Num2 = 0) then
                             raise MyExceptions.Calc_Exception with "Divide 0.";
                         end if;
@@ -227,8 +226,8 @@ package body MyCalculator with SPARK_Mode is
 
                         NumOut := Num1 / Num2;
                         PushNumber(C, NumOut);
-                end case; 
 
+                end if;
             -- If calc exception is raised, then push the number back
             exception
                 when MyExceptions.Calc_Exception =>
@@ -261,11 +260,11 @@ package body MyCalculator with SPARK_Mode is
             begin
                 -- check whether the variable exists
                 V := VariableStore.From_String(VarString);
-                if not VariableStore.Has_Variable(C.variableDB, V) then
+                if not VariableStore.Has_Variable(C.VariableDB, V) then
                     raise MyExceptions.Var_Exception with "Variable does not exist.";
                 else
                     -- If exist, push the value onto the stack
-                    Num := VariableStore.Get(C.variableDB, V);
+                    Num := VariableStore.Get(C.VariableDB, V);
                     Var := V;
                     PushNumber(C, Num);
                 end if;
@@ -297,7 +296,7 @@ package body MyCalculator with SPARK_Mode is
                 -- store the value into variable var
                 V := VariableStore.From_String(VarString);
                 Var := V;
-                VariableStore.Put(C.variableDB, V, Num);
+                VariableStore.Put(C.VariableDB, V, Num);
             end;
         end if;
     end StoreVar;
@@ -320,11 +319,11 @@ package body MyCalculator with SPARK_Mode is
                 -- check whether the variable exists
                 V := VariableStore.From_String(VarString);
                 Var := V;
-                if not VariableStore.Has_Variable(C.variableDB, V) then
+                if not VariableStore.Has_Variable(C.VariableDB, V) then
                     raise MyExceptions.Var_Exception with "Variable does not exist.";
                 else
                     -- remove the variable
-                    VariableStore.Remove(C.variableDB, V);
+                    VariableStore.Remove(C.VariableDB, V);
                 end if;
             end;
         end if;
@@ -338,7 +337,7 @@ package body MyCalculator with SPARK_Mode is
             raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- print out all currently defined variables and their corresponding values
-            VariableStore.Print(C.variableDB);
+            VariableStore.Print(C.VariableDB);
         end if;
     end List;
 

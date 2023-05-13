@@ -4,11 +4,10 @@ with MyExceptions;
 
 generic
     Max_Size : Positive;
-    type Item is private;
-    Default_Item : Item;
 
 package MyCalculator with SPARK_Mode is
     type MyCalculator is private;
+    subtype Item is Integer;
 
     ------------------- Public Procedures -------------------
     -- initializes the calculator with the given master PIN.
@@ -87,8 +86,8 @@ private
         masterPin : PIN.PIN;
         storage : StorageArray;
         size : Integer range 0..Max_Size;
-        variableDB : VariableStore.Database;
-        end record;
+        VariableDB : VariableStore.Database;
+    end record;
 
     ------------------- Util implementation-------------------
     -- help function for getting stack top
