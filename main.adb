@@ -21,8 +21,8 @@ procedure Main is
    MAX_LINE_LENGTH : constant Positive := 2048;
    LOCKED_PREFIX : constant String := "locked> ";
    UNLOCKED_PREFIX : constant String := "unlocked> ";
-   package MyCalculator is new MyCalculator(MAX_STACK_SIZE, Integer, 0);
-   C : MyCalculator.MyCalculator;
+   package CC is new MyCalculator(MAX_STACK_SIZE, Integer, 0);
+   C : CC.MyCalculator;
    package Lines is new MyString(Max_MyString_Length => MAX_LINE_LENGTH + 1);
    S  : Lines.MyString;
 begin
@@ -36,7 +36,7 @@ begin
    end if;
 
    -- init the calculator with the PIN from the command line
-   MyCalculator.Init(C, MyCommandLine.Argument(1));
+   CC.Init(C, MyCommandLine.Argument(1));
 
    -- the main loop of the calculator
    loop
@@ -50,7 +50,7 @@ begin
       ArgumentString : String := "";
    begin
       -- print the prefix
-      if MyCalculator.IsLocked(C) then
+      if CC.IsLocked(C) then
          Put(LOCKED_PREFIX);
       else
          Put(UNLOCKED_PREFIX);
@@ -80,24 +80,24 @@ begin
       CommandString := Lines.To_String(Command);
       
       -- If the command is an operator
-      if MyCalculator.IsValidOperator(CommandString) then
+      if CC.IsValidOperator(CommandString) then
          -- check lock status
-         if (MyCalculator.IsLocked(C)) then
+         if (CC.IsLocked(C)) then
             raise MyExceptions.Lock_Exception with "Calculator is locked!";
          else
             declare
                Result : Integer;
             begin
-            MyCalculator.PerformOperation(C, CommandString, Result);
+            CC.PerformOperation(C, CommandString, Result);
             end;
          end if;
 
       -- if the command is valid, but not an operator
-      elsif MyCalculator.IsValidCommand(CommandString) then
+      elsif CC.IsValidCommand(CommandString) then
          -- try to parse unary command
          if SizeTokens = 1 then
             -- check lock status
-            if (MyCalculator.IsLocked(C)) then
+            if (CC.IsLocked(C)) then
                raise MyExceptions.Lock_Exception with "Calculator is locked!";
             else
                case CommandString is
@@ -106,16 +106,16 @@ begin
                      declare
                         NumOut : Integer;
                      begin
-                     if MyCalculator.Size(C) <= 0 then
+                     if CC.Size(C) <= 0 then
                         raise MyExceptions.Stack_Exception with "Stack is empty!";
                      else
-                        MyCalculator.PopNumber (C, NumOut);
+                        CC.PopNumber (C, NumOut);
                         Put_Line(Integer'Image(NumOut));
                      end if;
                      end;
                   -- list the variable storage
                   when  "list" =>
-                     MyCalculator.ListVariables(C);
+                     CC.ListVariables(C);
 
                   -- other undefined command
                   when others =>
@@ -132,23 +132,23 @@ begin
             -- handle lock/unlock command logic
             if (CommandString = "lock" or CommandString = "unlock") then
                -- Check argument is the valid pin string or not
-               if not MyCalculator.IsPin(ArgumentString) then
+               if not CC.IsPin(ArgumentString) then
                   raise MyExceptions.PIN_Exception with "PIN should be 0000 . . . 9999. ";
                else
                   if (CommandString = "lock") then
                      -- if the calculator is already locked, raise exception
-                     if (MyCalculator.IsLocked(C)) then
+                     if (CC.IsLocked(C)) then
                         raise MyExceptions.Lock_Exception with "already locked!";
                      else
-                        MyCalculator.Lock(C, ArgumentString);
+                        CC.Lock(C, ArgumentString);
                      end if;
                      
                   else
                      -- if the calculator is already unlocked, raise exception
-                     if not MyCalculator.IsLocked(C) then
+                     if not CC.IsLocked(C) then
                         raise MyExceptions.Lock_Exception with "already unlocked!";
                      else
-                        MyCalculator.UnLock(C, ArgumentString);
+                        CC.UnLock(C, ArgumentString);
                      end if;
                   end if;
                end if;
@@ -156,7 +156,7 @@ begin
             -- handles commands except lock/unlock logic
             else
                -- check lock status
-               if (MyCalculator.IsLocked(C)) then
+               if (CC.IsLocked(C)) then
                   raise MyExceptions.Lock_Exception with "Calculator is locked!";
                else
                   case CommandString is
@@ -168,10 +168,10 @@ begin
                         -- convert string to integer
                         NumIn := StringToInteger.From_String(ArgumentString);
                         -- push the value
-                        if MyCalculator.Size(C) > MAX_STACK_SIZE then
+                        if CC.Size(C) > MAX_STACK_SIZE then
                            raise MyExceptions.Stack_Exception with "Stack is full!";
                         else
-                           MyCalculator.PushNumber(C, NumIn);
+                           CC.PushNumber(C, NumIn);
                         end if;
                         end;
 
@@ -181,10 +181,10 @@ begin
                            VarOut : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
-                        if not MyCalculator.IsValidVarName(ArgumentString) then
+                        if not CC.IsValidVarName(ArgumentString) then
                            raise MyExceptions.Var_Exception with "Variable name is invalid.";
                         else
-                            MyCalculator.LoadVar(C, ArgumentString, VarOut);
+                            CC.LoadVar(C, ArgumentString, VarOut);
                         end if;
                         end;
                         
@@ -194,10 +194,10 @@ begin
                            VarOut : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
-                        if not MyCalculator.IsValidVarName(ArgumentString) then
+                        if not CC.IsValidVarName(ArgumentString) then
                            raise MyExceptions.Var_Exception with "Variable name is invalid.";
                         else
-                           MyCalculator.StoreVar(C, ArgumentString, VarOut);
+                           CC.StoreVar(C, ArgumentString, VarOut);
                         end if;
                         end;
 
@@ -207,10 +207,10 @@ begin
                            VarOut : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
-                        if not MyCalculator.IsValidVarName(ArgumentString) then
+                        if not CC.IsValidVarName(ArgumentString) then
                            raise MyExceptions.Var_Exception with "Variable name is invalid.";
                         else
-                           MyCalculator.removeVar(C, ArgumentString, VarOut);
+                           CC.removeVar(C, ArgumentString, VarOut);
                         end if;
                         end;
 
