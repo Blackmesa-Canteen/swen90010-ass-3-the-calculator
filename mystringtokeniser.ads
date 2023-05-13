@@ -18,7 +18,7 @@ package MyStringTokeniser with SPARK_Mode is
 
    -- Tokenise a string into an array of tokens
    procedure Tokenise(S : in String; Tokens : in out TokenArray; Count : out Natural) with
-     -- Precondition: If S is not null, then tokens is not null
+     -- Precondition: If S is not null, then tokens array has space to store at least one token.
      Pre => (if S'Length > 0 then S'First <= S'Last) and Tokens'First <= Tokens'Last,
      -- Postcondition: Count number is not greater than the size of Tokens array, and
      -- for each counted token in Tokens array, the start index is within the range of S, and

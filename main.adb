@@ -11,16 +11,19 @@ with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
 with MyExceptions;
 with MyCalculator;
 with Ada.Exceptions;  use Ada.Exceptions;
+with VariableStore; use VariableStore;
 
 with Ada.Long_Long_Integer_Text_IO;
 
 procedure Main is
-   package MyCalculator is new MyCalculator(512, Integer, 0);
-   C : MyCalculator.Calculator;
-   package Lines is new MyString(Max_MyString_Length => 2048);
-   S  : Lines.MyString;
+   MAX_STACK_SIZE : constant Positive := 512;
+   MAX_LINE_LENGTH : constant Positive := 2048;
    LOCKED_PREFIX : constant String := "locked> ";
    UNLOCKED_PREFIX : constant String := "unlocked> ";
+   package MyCalculator is new MyCalculator(MAX_STACK_SIZE, Integer, 0);
+   C : MyCalculator.Calculator;
+   package Lines is new MyString(Max_MyString_Length => MAX_LINE_LENGTH + 1);
+   S  : Lines.MyString;
 begin
 
    -- check runtime arguments
@@ -36,6 +39,14 @@ begin
 
    -- the main loop of the calculator
    loop
+   declare
+      -- Splitting the text into at most 3 tokens: [prefix, command, argument]
+      Tokens : MyStringTokeniser.TokenArray(1..3) := (others => (Start => 1, Length => 0));
+      SizeTokens : Natural;
+      Command : Lines.MyString := Lines.From_String("");
+      CommandString : String := "";
+      Argument : Lines.MyString := Lines.From_String("");
+      ArgumentString : String := "";
    begin
       -- print the prefix
       if MyCalculator.IsLocked(C) then
@@ -44,23 +55,175 @@ begin
          Put(UNLOCKED_PREFIX);
       end if;
 
-      -- TODO read a line of input
+      -- read a line of input
       Lines.Get_Line(S);
-      -- TODO validate input
-      if Lines.Length(S) > 2048 then
-         raise MyExceptions.Syntex_Exception with "Input too long";
+
+      -- validate input: length
+      if Lines.Length(S) > MAX_LINE_LENGTH then
+         raise MyExceptions.Syntex_Exception with "Input too long!";
       end if;
 
-      -- TODO check empty input
+      -- parse input into tokens array
+      MyStringTokeniser.Tokenise(Lines.To_String(S),Tokens,SizeTokens);
 
-      -- TODO execute calculator based on input
+      -- parse token
+      -- check exceptional line
+      if SizeTokens < 1 then
+         raise MyExceptions.Syntex_Exception with "Empty entry!";
+      elsif SizeTokens > 2 then
+         raise MyExceptions.Syntex_Exception with "Too much arguments!";
+      end if;
 
-      -- TODO print the result
+      -- parse commands and convert into string
+      Command := Lines.To_String(
+         Lines.Substring(S,Tokens(1).Start,Tokens(1).Start+Tokens(1).Length-1));
+      CommandString := MyString.To_String(Command);
+      
+      -- If the command is an operator
+      if MyCalculator.IsValidOperator(CommandString) then
+         -- check lock status
+         if (MyCalculator.IsLocked(C)) then
+            raise MyExceptions.Lock_Exception with "Calculator is locked!";
+         else
+            MyCalculator.PerformOperation(CommandString);
+         end if;
 
+      -- if the command is valid, but not an operator
+      elsif MyCalculator.IsValidCommand(CommandString) then
+         -- try to parse unary command
+         if SizeTokens = 1 then
+            -- check lock status
+            if (MyCalculator.IsLocked(C)) then
+               raise MyExceptions.Lock_Exception with "Calculator is locked!";
+            else
+               case CommandString is
+                  -- pop and show the number
+                  when "pop" =>
+                     declare
+                        NumOut : Integer;
+                     begin
+                     if MyCalculator.Size(C) <= 0 then
+                        raise MyExceptions.Stack_Exception with "Stack is empty!";
+                     else
+                        MyCalculator.PopNumber (C, NumOut);
+                        Put_Line(Integer'Image(NumOut));
+                     end if;
+                     end;
+                  -- list the variable storage
+                  when  "list" =>
+                     MyCalculator.ListVariables(C);
 
-   -- deal with exceptions
+                  -- other undefined command
+                  when others =>
+                     raise MyExceptions.Syntex_Exception with "Unrecognized command!";
+               end case;
+            end if;
+
+         -- try to parse binary command with its argument
+         elsif SizeTokens = 2 then
+            -- parse the argument
+            Argument := Lines.To_String(
+               Lines.Substring(S,Tokens(2).Start,Tokens(2).Start+Tokens(2).Length-1));
+            ArgumentString := MyString.To_String(Argument);
+
+            -- handle lock/unlock command logic
+            if (CommandString = "lock" or CommandString = "unlock") then
+               -- Check argument is the valid pin string or not
+               if not MyCalculator.IsPin(ArgumentString) then
+                  raise MyExceptions.PIN_Exception with "PIN should be 0000 . . . 9999. ";
+               else
+                  if (CommandString = "lock") then
+                     -- if the calculator is already locked, raise exception
+                     if (MyCalculator.IsLocked(C)) then
+                        raise MyExceptions.Lock_Exception with "already locked!";
+                     else
+                        MyCalculator.Lock(C, ArgumentString);
+                     end if;
+                     
+                  else
+                     -- if the calculator is already unlocked, raise exception
+                     if not MyCalculator.IsLocked(C) then
+                        raise MyExceptions.Lock_Exception with "already unlocked!";
+                     else
+                        MyCalculator.UnLock(C, ArgumentString);
+                     end if;
+                  end if;
+               end if;
+
+            -- handles commands except lock/unlock logic
+            else
+               -- check lock status
+               if (MyCalculator.IsLocked(C)) then
+                  raise MyExceptions.Lock_Exception with "Calculator is locked!";
+               else
+                  case CommandString is
+                     -- push the number
+                     when "push" =>
+                        declare
+                           NumIn : Integer;
+                        begin
+                        -- convert string to integer
+                        NumIn := StringToInteger.From_String(ArgumentString);
+                        -- push the value
+                        if MyCalculator.Size(C) > MAX_STACK_SIZE then
+                           raise MyExceptions.Stack_Exception with "Stack is full!";
+                        else
+                           MyCalculator.PushNumber(C, NumIn);
+                        end if;
+                        end;
+
+                     -- load the variable
+                     when "load" =>
+                        declare
+                           VarOut : VariableStore.Variable;
+                        begin
+                        -- check the variable is valid or not
+                        if not MyCalculator.IsValidVarName(ArgumentString) then
+                           raise MyExceptions.Var_Exception with "Variable name is invalid.";
+                        else
+                            MyCalculator.LoadVar(C, ArgumentString, VarOut);
+                        end if;
+                        end;
+                        
+                     -- store the variable
+                     when "store" =>
+                        declare
+                           VarOut : VariableStore.Variable;
+                        begin
+                        -- check the variable is valid or not
+                        if not MyCalculator.IsValidVarName(ArgumentString) then
+                           raise MyExceptions.Var_Exception with "Variable name is invalid.";
+                        else
+                           MyCalculator.StoreVar(C, ArgumentString, VarOut);
+                        end if;
+                        end;
+
+                     -- remove the variable
+                     when "remove" =>
+                        declare
+                           VarOut : VariableStore.Variable;
+                        begin
+                        -- check the variable is valid or not
+                        if not MyCalculator.IsValidVarName(ArgumentString) then
+                           raise MyExceptions.Var_Exception with "Variable name is invalid.";
+                        else
+                           MyCalculator.removeVar(C, ArgumentString, VarOut);
+                        end if;
+                        end;
+
+                     -- other undefined command
+                     when others =>
+                        raise MyExceptions.Syntex_Exception with "Unrecognized command!";
+                  end case;
+               end if;
+            end if;
+         end if;
+      else
+         raise MyExceptions.Syntex_Exception with "Unrecognized command!";
+      end if;
+   
+   -- deal with exceptions in loop
    exception
-
       -- deal with non-major exceptions without exit system
       when E : MyExceptions.Lock_Exception =>
          Put_Line(Exception_Message (E));
@@ -79,7 +242,6 @@ begin
          exit;
    end;
    end loop;
-
 
 end Main;
 
@@ -163,7 +325,5 @@ begin
    end;
    Put_Line("2 ** 32 is too big to fit into an Integer...");
    Put_Line("Hence when trying to parse it from a string, it is treated as 0:");
-   Put(StringToInteger.From_String("2147483648")); New_Line;
-   
-      
+   Put(StringToInteger.From_String("2147483648")); New_Line;    
 end Backup_Main;

@@ -18,7 +18,7 @@ package body MyStringTokeniser with SPARK_Mode is
       -- Pointer to the first character of the string
       Index := S'First;
 
-      -- traverse within the String
+      -- if tokens array is not filled up, traverse the String and put token into the array
       while OutIndex <= Tokens'Last and Index <= S'Last and Count < Tokens'Length loop
          -- Loop_Invariant 1:
          -- Guarantee the correct state: During the loop, all tokens in the output Tokens array

@@ -10,8 +10,7 @@ generic
 package MyCalculator with SPARK_Mode is
     type MyCalculator is private;
 
-    -- public functions -------------------------------------------------------
-
+    ------------------- Public Procedures -------------------
     -- initializes the calculator with the given master PIN.
     procedure Init(C : out MyCalculator; MasterPINString : in String);
 
@@ -60,6 +59,29 @@ package MyCalculator with SPARK_Mode is
     -- prints out all currently defined variables and their corresponding values.
     procedure List(C : in MyCalculator);
 
+    ------------------- Utils -------------------
+    -- helper function for checking if the string is a valid number
+    function IsNumber (S : in String) return Boolean;
+   
+    -- check if the string is a valid pin, is a 4-digit string of 
+    -- non-whitespace characters that represents a non-negative number 
+    -- (i.e. a natural number) in the range 0000 . . . 9999. 
+    function IsPin (S : in String) return Boolean;
+
+    -- check if the string is a valid integer
+    function IsValidInt(V : in Item) return Boolean;
+
+    -- check if the string is a valid operator
+    function IsValidOperator(S : in String) return Boolean;
+
+    -- check if the string is a valid Var name, which is the 
+    -- string of non-whitespace characters, and names longer 
+    -- than 1024 characters are invalid.
+    function IsValidVarName(S : in String) return Boolean;
+
+    -- check if the string is a valid command for the calc
+    function IsValidCommand (S : in String) return Boolean;
+
 
 private
     type StorageArray is array (Integer range 1..Max_Size) of Item;
@@ -71,8 +93,7 @@ private
         variableDB : VariableStore.Database;
         end record;
 
-    -- private Utils ----------------------------------------------------------
-
+    ------------------- Util implementation-------------------
     -- help function for getting stack top
     function Size(C : in MyCalculator) return Integer is
         (C.size);
@@ -81,34 +102,36 @@ private
     function Storage(C : in MyCalculator; Pos : in Integer) return Item is
         (C.storage(Pos));
 
-    -- helper function for checking if the calculator is locked or not
-    function GetLockState(C : in MyCalculator) return Boolean is
-        (C.isLocked);
-
     -- helper function for checking if the string is a valid number
-    function IsNumber (S:String) return Boolean is
+    function IsNumber (S: in String) return Boolean is
         (for all I in S'Range => 
             S(I) >= '0' and S(I) <= '9');
    
     -- check if the string is a valid pin, is a 4-digit string of 
     -- non-whitespace characters that represents a non-negative number 
     -- (i.e. a natural number) in the range 0000 . . . 9999. 
-    function IsPin (S : String) return Boolean is
+    function IsPin (S : in String) return Boolean is
         (S'Length = 4 and IsNumber(S));
 
     -- check if the string is a valid integer
-    function IsValidInt(V : Item) return Boolean is
+    function IsValidInt(V : in Item) return Boolean is
         (V  >= Integer'First and V <= Integer'Last);
 
     -- check if the string is a valid operator
-    function IsValidOperator(S : String) return Boolean is
+    function IsValidOperator(S : in String) return Boolean is
         (S = "+" or S = "-" or S = "*" or S = "/");
 
     -- check if the string is a valid Var name, which is the 
     -- string of non-whitespace characters, and names longer 
     -- than 1024 characters are invalid.
-    function IsValidVarName(S : String) return Boolean is
+    function IsValidVarName(S : in String) return Boolean is
         (S'Length <= 1024 and for all I in S'Range 
             => S(I) /= ' ');
+
+    -- check if the string is a valid command for the calc
+    function IsValidCommand (S : in String) return Boolean is
+        (S = "push" or S = "pop" or S = "load" 
+            or S = "store" or S = "remove" or S = "lock"
+            or S = "unlock" or S = "list");
 
 end MyCalculator;

@@ -138,6 +138,7 @@ package body MyCalculator with SPARK_Mode is
                 IsProductPossitive: Boolean;
                 Max_Integer : constant Integer := Integer'Last;
                 Min_Integer : constant Integer := Integer'First;
+                Temp_R : Long_Long_Integer := 0;
             begin
                 -- pop out the number
                 PopNumber(C, Num1);
@@ -154,41 +155,62 @@ package body MyCalculator with SPARK_Mode is
                  -- compute the corresponding arithmetic operation on them
                 case Operator is
                     when "+" =>
-                        -- check addition positive overflow
-                        if (IsNum2Possitive and Num1 > Max_Integer - Num2) then
+                        -- check addition overflow
+                        Temp_R := Long_Long_Integer(num1) + Long_Long_Integer(num2);
+                        if (Temp_R > Long_Long_Integer(Max_Integer) or 
+                            Temp_R < Long_Long_Integer(Min_Integer)) then
                             raise MyExceptions.Calc_Exception with "Addition overflow.";
                         end if;
 
+                        -- check addition positive overflow
+                        --  if (IsNum2Possitive and Num1 > Max_Integer - Num2) then
+                        --      raise MyExceptions.Calc_Exception with "Addition overflow.";
+                        --  end if;
+
                         -- check addition negative overflow
-                        if (not IsNum2Possitive and Num1 < Min_Integer - Num2) then
-                            raise MyExceptions.Calc_Exception with "Addition overflow.";
-                        end if;
+                        --  if (not IsNum2Possitive and Num1 < Min_Integer - Num2) then
+                        --      raise MyExceptions.Calc_Exception with "Addition overflow.";
+                        --  end if;
 
                         NumOut := Num1 + Num2;
                         PushNumber(C, NumOut);
                     when "-" =>
-                        -- check subtraction positive overflow
-                        if (not IsNum2Possitive and Num1 > Max_Integer + Num2) then
-                            raise MyExceptions.Calc_Exception with "Subtraction overflow.";
+                        -- check substraction overflow
+                        Temp_R := Long_Long_Integer(num1) - Long_Long_Integer(num2);
+                        if (Temp_R > Long_Long_Integer(Max_Integer) or 
+                            Temp_R < Long_Long_Integer(Min_Integer)) then
+                            raise MyExceptions.Calc_Exception with "Addition overflow.";
                         end if;
 
+                        -- check subtraction positive overflow
+                        --  if (not IsNum2Possitive and Num1 > Max_Integer + Num2) then
+                        --      raise MyExceptions.Calc_Exception with "Subtraction overflow.";
+                        --  end if;
+
                         -- check substraction negative overflow
-                        if (IsNum2Possitive and Num1 < Min_Integer + Num2) then
-                            raise MyExceptions.Calc_Exception with "Subtraction overflow.";
-                        end if;
+                        --  if (IsNum2Possitive and Num1 < Min_Integer + Num2) then
+                        --      raise MyExceptions.Calc_Exception with "Subtraction overflow.";
+                        --  end if;
 
                         NumOut := Num1 - Num2;
                         PushNumber(C, NumOut);
                     when "*" =>
-                        -- check multiplication possitive overflow
-                        if (IsProductPossitive and Num1 > Max_Integer / Num2) then
-                            raise MyExceptions.Calc_Exception with "Multiplication overflow.";
+                        -- check multiplication overflow
+                        Temp_R := Long_Long_Integer(num1) * Long_Long_Integer(num2);
+                        if (Temp_R > Long_Long_Integer(Max_Integer) or 
+                            Temp_R < Long_Long_Integer(Min_Integer)) then
+                            raise MyExceptions.Calc_Exception with "Addition overflow.";
                         end if;
 
+                        -- check multiplication possitive overflow
+                        --  if (IsProductPossitive and Num1 > Max_Integer / Num2) then
+                        --      raise MyExceptions.Calc_Exception with "Multiplication overflow.";
+                        --  end if;
+
                         -- check multiplication negative overflow
-                        if (not IsProductPossitive and Num1 < Min_Integer / Num2) then
-                            raise MyExceptions.Calc_Exception with "Multiplication overflow.";
-                        end if;
+                        --  if (not IsProductPossitive and Num1 < Min_Integer / Num2) then
+                        --      raise MyExceptions.Calc_Exception with "Multiplication overflow.";
+                        --  end if;
 
                         NumOut := Num1 * Num2;
                         PushNumber(C, NumOut);
@@ -198,10 +220,17 @@ package body MyCalculator with SPARK_Mode is
                             raise MyExceptions.Calc_Exception with "Divide 0.";
                         end if;
 
-                        -- check multiplication overflow
-                        if (Num1 = Max_Integer and Num2 = -1) then
-                            raise MyExceptions.Calc_Exception with "Division overflow.";
+                        -- check division overflow
+                        Temp_R := Long_Long_Integer(num1) / Long_Long_Integer(num2);
+                        if (Temp_R > Long_Long_Integer(Max_Integer) or 
+                            Temp_R < Long_Long_Integer(Min_Integer)) then
+                            raise MyExceptions.Calc_Exception with "Addition overflow.";
                         end if;
+
+                        -- check division overflow
+                        --  if (Num1 = Max_Integer and Num2 = -1) then
+                        --      raise MyExceptions.Calc_Exception with "Division overflow.";
+                        --  end if;
 
                         NumOut := Num1 / Num2;
                         PushNumber(C, NumOut);
