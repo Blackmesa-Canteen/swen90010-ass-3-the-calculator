@@ -30,12 +30,17 @@ package body MyCalculator with SPARK_Mode is
             raise MyExceptions.PIN_Exception with "PIN should be 0000 . . . 9999.";
         end if;
 
-        -- if locked, compare password and try to unlock
-        if ((C.isLocked = True) and then PIN."="(PIN.From_String(PINString), C.MasterPIN)) then
-            C.isLocked := False;
-        else
+        if (C.isLocked = False) then
             -- already unlocked, throw exception to print something
             raise MyExceptions.Lock_Exception with "Already unlocked.";
+        else
+            -- if locked, compare password and try to unlock
+            if (PIN."="(PIN.From_String(PINString), C.MasterPIN)) then
+                C.isLocked := False;
+            else
+                -- wrong password
+                raise MyExceptions.Lock_Exception with "Password is wrong.";
+            end if;
         end if;
 
     end Unlock;

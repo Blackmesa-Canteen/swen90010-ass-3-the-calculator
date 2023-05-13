@@ -46,9 +46,7 @@ begin
       Tokens : MyStringTokeniser.TokenArray(1..3) := (others => (Start => 1, Length => 0));
       SizeTokens : Natural;
       Command : Lines.MyString := Lines.From_String("");
-      CommandString : String := "";
       Argument : Lines.MyString := Lines.From_String("");
-      ArgumentString : String := "";
    begin
       -- print the prefix
       if CC.IsLocked(C) then
@@ -78,8 +76,9 @@ begin
 
       -- parse commands and convert into string
       Command := Lines.Substring(S,Tokens(1).Start,Tokens(1).Start+Tokens(1).Length-1);
-      CommandString := Lines.To_String(Command);
-      
+      declare
+         CommandString : String := Lines.To_String(Command);
+      begin
       -- If the command is an operator
       if CC.IsValidOperator(CommandString) then
          -- check lock status
@@ -128,8 +127,9 @@ begin
          elsif SizeTokens = 2 then
             -- parse the argument
             Argument := Lines.Substring(S,Tokens(2).Start,Tokens(2).Start+Tokens(2).Length-1);
-            ArgumentString := Lines.To_String(Argument);
-
+            declare
+               ArgumentString : String := Lines.To_String(Argument);
+            begin
             -- handle lock/unlock command logic
             if (CommandString = "lock" or CommandString = "unlock") then
                -- Check argument is the valid pin string or not
@@ -221,10 +221,12 @@ begin
                   end case;
                end if;
             end if;
+            end;
          end if;
       else
          raise MyExceptions.Syntex_Exception with "Unrecognized command!";
       end if;
+      end;
    
    -- deal with exceptions in loop
    exception
