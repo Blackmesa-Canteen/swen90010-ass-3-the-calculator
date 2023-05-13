@@ -33,7 +33,7 @@ begin
       Put_Line("Usage: "); 
       Put(MyCommandLine.Command_Name); 
       Put_Line(" <PIN>");
-      Ada.Command_Line.Set_Exit_Status(Ada.Command_Line.Failure);
+      return;
    end if;
 
    -- init the calculator with the PIN from the command line
@@ -239,11 +239,15 @@ begin
          Put_Line(Exception_Message (E));
       when E : MyExceptions.Var_Exception =>
          Put_Line(Exception_Message (E));
+      when E : MyExceptions.Stack_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Syntex_Exception =>
+         Put_Line(Exception_Message (E));
 
       -- deal with major exceptions with exiting system
       when E : others =>
          Put_Line(Exception_Message (E));
-         Ada.Command_Line.Set_Exit_Status(Ada.Command_Line.Failure);
+         return;
    end;
    end loop;
 
