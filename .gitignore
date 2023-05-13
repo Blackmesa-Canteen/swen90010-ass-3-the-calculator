@@ -9,3 +9,5 @@
 
 # Compiled main
 main
+
+obj/*
