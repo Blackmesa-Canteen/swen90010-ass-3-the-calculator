@@ -42,7 +42,7 @@ begin
    -- the main loop of the calculator
    loop
    declare
-      -- Splitting the text into at most 3 tokens: [prefix, command, argument]
+      -- Splitting the text into at most 3 tokens
       Tokens : MyStringTokeniser.TokenArray(1..3) := (others => (Start => 1, Length => 0));
       SizeTokens : Natural;
       Command : Lines.MyString := Lines.From_String("");
