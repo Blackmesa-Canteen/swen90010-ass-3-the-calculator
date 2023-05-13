@@ -27,7 +27,7 @@ package MyCalculator with SPARK_Mode is
     function Size(C : in MyCalculator) return Integer;
 
     -- helper ghost function for checking
-    function Storage(S : in MyCalculator; Pos : in Integer) return Item with
+    function Storage(C : in MyCalculator; Pos : in Integer) return Item with
      Ghost,
      Pre => Pos >= 1 and Pos <= Max_Size;
 
@@ -67,9 +67,6 @@ package MyCalculator with SPARK_Mode is
     -- non-whitespace characters that represents a non-negative number 
     -- (i.e. a natural number) in the range 0000 . . . 9999. 
     function IsPin (S : in String) return Boolean;
-
-    -- check if the string is a valid integer
-    function IsValidInt(V : in Item) return Boolean;
 
     -- check if the string is a valid operator
     function IsValidOperator(S : in String) return Boolean;
@@ -113,10 +110,6 @@ private
     function IsPin (S : in String) return Boolean is
         (S'Length = 4 and IsNumber(S));
 
-    -- check if the string is a valid integer
-    function IsValidInt(V : in Item) return Boolean is
-        (V  >= Integer'First and V <= Integer'Last);
-
     -- check if the string is a valid operator
     function IsValidOperator(S : in String) return Boolean is
         (S = "+" or S = "-" or S = "*" or S = "/");
@@ -125,8 +118,8 @@ private
     -- string of non-whitespace characters, and names longer 
     -- than 1024 characters are invalid.
     function IsValidVarName(S : in String) return Boolean is
-        (S'Length <= 1024 and for all I in S'Range 
-            => S(I) /= ' ');
+        (S'Length <= 1024 and then (for all I in S'Range 
+            => S(I) /= ' '));
 
     -- check if the string is a valid command for the calc
     function IsValidCommand (S : in String) return Boolean is

@@ -72,13 +72,6 @@ package body MyCalculator with SPARK_Mode is
         if (C.isLocked = True) then
             raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
-            -- handle int overflow: Decimal integers in commands 
-            -- (e.g. “5” in “push 5”) that are outside the range 
-            -- −2^31. . . 2^31-1 inclusive are treated as 0.
-            if not IsValidInt(NumIn) then
-                NumIn := 0;
-            end if;
-
             -- check whether the stack is full
             if (C.size >= Max_Size) then
                 raise MyExceptions.Stack_Exception with "Stack is full.";

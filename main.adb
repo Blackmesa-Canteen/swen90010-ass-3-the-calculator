@@ -14,6 +14,7 @@ with Ada.Exceptions;  use Ada.Exceptions;
 with VariableStore; use VariableStore;
 
 with Ada.Long_Long_Integer_Text_IO;
+with Ada.Command_Line;
 
 procedure Main is
    MAX_STACK_SIZE : constant Positive := 512;
@@ -21,7 +22,7 @@ procedure Main is
    LOCKED_PREFIX : constant String := "locked> ";
    UNLOCKED_PREFIX : constant String := "unlocked> ";
    package MyCalculator is new MyCalculator(MAX_STACK_SIZE, Integer, 0);
-   C : MyCalculator.Calculator;
+   C : MyCalculator.MyCalculator;
    package Lines is new MyString(Max_MyString_Length => MAX_LINE_LENGTH + 1);
    S  : Lines.MyString;
 begin
@@ -31,7 +32,7 @@ begin
       Put_Line("Usage: "); 
       Put(MyCommandLine.Command_Name); 
       Put_Line(" <PIN>");
-      exit;
+      Ada.Command_Line.Set_Exit_Status(Ada.Command_Line.Failure);
    end if;
 
    -- init the calculator with the PIN from the command line
@@ -75,9 +76,8 @@ begin
       end if;
 
       -- parse commands and convert into string
-      Command := Lines.To_String(
-         Lines.Substring(S,Tokens(1).Start,Tokens(1).Start+Tokens(1).Length-1));
-      CommandString := MyString.To_String(Command);
+      Command := Lines.Substring(S,Tokens(1).Start,Tokens(1).Start+Tokens(1).Length-1);
+      CommandString := Lines.To_String(Command);
       
       -- If the command is an operator
       if MyCalculator.IsValidOperator(CommandString) then
@@ -85,7 +85,11 @@ begin
          if (MyCalculator.IsLocked(C)) then
             raise MyExceptions.Lock_Exception with "Calculator is locked!";
          else
-            MyCalculator.PerformOperation(CommandString);
+            declare
+               Result : Integer;
+            begin
+            MyCalculator.PerformOperation(C, CommandString, Result);
+            end;
          end if;
 
       -- if the command is valid, but not an operator
@@ -122,9 +126,8 @@ begin
          -- try to parse binary command with its argument
          elsif SizeTokens = 2 then
             -- parse the argument
-            Argument := Lines.To_String(
-               Lines.Substring(S,Tokens(2).Start,Tokens(2).Start+Tokens(2).Length-1));
-            ArgumentString := MyString.To_String(Argument);
+            Argument := Lines.Substring(S,Tokens(2).Start,Tokens(2).Start+Tokens(2).Length-1);
+            ArgumentString := Lines.To_String(Argument);
 
             -- handle lock/unlock command logic
             if (CommandString = "lock" or CommandString = "unlock") then
@@ -239,91 +242,8 @@ begin
       -- deal with major exceptions with exiting system
       when E : others =>
          Put_Line(Exception_Message (E));
-         exit;
+         Ada.Command_Line.Set_Exit_Status(Ada.Command_Line.Failure);
    end;
    end loop;
 
 end Main;
-
-procedure Backup_Main is
-   DB : VariableStore.Database;
-   V1 : VariableStore.Variable := VariableStore.From_String("Var1");
-   PIN1  : PIN.PIN := PIN.From_String("1234");
-   PIN2  : PIN.PIN := PIN.From_String("1234");
-   package Lines is new MyString(Max_MyString_Length => 2048);
-   S  : Lines.MyString;
-begin
-
-   Put(MyCommandLine.Command_Name); Put_Line(" is running!");
-   Put("I was invoked with "); Put(MyCommandLine.Argument_Count,0); Put_Line(" arguments.");
-   for Arg in 1..MyCommandLine.Argument_Count loop
-      Put("Argument "); Put(Arg,0); Put(": """);
-      Put(MyCommandLine.Argument(Arg)); Put_Line("""");
-   end loop;
-
-   VariableStore.Init(DB);
-   Put_Line("Adding an entry to the database");
-   VariableStore.Put(DB,V1,10);
-
-   Put_Line("Reading the entry:");
-   Put(VariableStore.Get(DB,V1));
-   New_Line;
-   
-   Put_Line("Printing out the database: ");
-   VariableStore.Print(DB);
-   
-   Put_Line("Removing the entry");
-   VariableStore.Remove(DB,V1);
-   If VariableStore.Has_Variable(DB,V1) then
-      Put_Line("Entry still present! It is: ");
-      Put(VariableStore.Get(DB,V1));
-      New_Line;
-   else
-      Put_Line("Entry successfully removed");
-   end if;
-
-   Put_Line("Reading a line of input. Enter some text (at most 3 tokens): ");
-   Lines.Get_Line(S);
-
-   Put_Line("Splitting the text into at most 5 tokens");
-   declare
-      T : MyStringTokeniser.TokenArray(1..5) := (others => (Start => 1, Length => 0));
-      NumTokens : Natural;
-   begin
-      MyStringTokeniser.Tokenise(Lines.To_String(S),T,NumTokens);
-      Put("You entered "); Put(NumTokens); Put_Line(" tokens.");
-      for I in 1..NumTokens loop
-         declare
-            TokStr : String := Lines.To_String(Lines.Substring(S,T(I).Start,T(I).Start+T(I).Length-1));
-         begin
-            Put("Token "); Put(I); Put(" is: """);
-            Put(TokStr); Put_Line("""");
-         end;
-      end loop;
-      if NumTokens > 3 then
-         Put_Line("You entered too many tokens --- I said at most 3");
-      end if;
-   end;
-
-   If PIN."="(PIN1,PIN2) then
-      Put_Line("The two PINs are equal, as expected.");
-   end if;
-   
-   declare
-      Smallest_Integer : Integer := StringToInteger.From_String("-2147483648");
-      R : Long_Long_Integer := 
-        Long_Long_Integer(Smallest_Integer) * Long_Long_Integer(Smallest_Integer);
-   begin
-      Put_Line("This is -(2 ** 32) (where ** is exponentiation) :");
-      Put(Smallest_Integer); New_Line;
-      
-      if R < Long_Long_Integer(Integer'First) or
-         R > Long_Long_Integer(Integer'Last) then
-         Put_Line("Overflow would occur when trying to compute the square of this number");
-      end if;
-         
-   end;
-   Put_Line("2 ** 32 is too big to fit into an Integer...");
-   Put_Line("Hence when trying to parse it from a string, it is treated as 0:");
-   Put(StringToInteger.From_String("2147483648")); New_Line;    
-end Backup_Main;
