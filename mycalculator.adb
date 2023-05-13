@@ -175,7 +175,7 @@ package body MyCalculator with SPARK_Mode is
                         Temp_R := Long_Long_Integer(num1) - Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
-                            raise MyExceptions.Calc_Exception with "Addition overflow.";
+                            raise MyExceptions.Calc_Exception with "Substraction overflow.";
                         end if;
 
                         -- check subtraction positive overflow
@@ -195,7 +195,7 @@ package body MyCalculator with SPARK_Mode is
                         Temp_R := Long_Long_Integer(num1) * Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
-                            raise MyExceptions.Calc_Exception with "Addition overflow.";
+                            raise MyExceptions.Calc_Exception with "Multiplication overflow.";
                         end if;
 
                         -- check multiplication possitive overflow
@@ -221,7 +221,7 @@ package body MyCalculator with SPARK_Mode is
                         Temp_R := Long_Long_Integer(num1) / Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
-                            raise MyExceptions.Calc_Exception with "Addition overflow.";
+                            raise MyExceptions.Calc_Exception with "Divition overflow.";
                         end if;
 
                         -- check division overflow
