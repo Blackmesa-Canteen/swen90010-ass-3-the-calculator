@@ -1,4 +1,3 @@
-with Ada.Text_IO; use Ada.Text_IO;
 package body MyCalculator with SPARK_Mode is
 
     -- Init the calc
@@ -9,7 +8,7 @@ package body MyCalculator with SPARK_Mode is
 
         -- check valid pin string
         if not IsPin(MasterPINString) then
-            Put_Line("PIN_Exception: PIN should be 0000 . . . 9999.");
+            raise MyExceptions.PIN_Exception with "PIN should be 0000 . . . 9999. ";
         end if;
         C.MasterPIN := PIN.From_String(MasterPINString);
 
@@ -28,19 +27,19 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check whether the string is valid
         if not IsPin(PINString) then
-            Put_Line("PIN_Exception: PIN should be 0000 . . . 9999.");
+            raise MyExceptions.PIN_Exception with "PIN should be 0000 . . . 9999.";
         end if;
 
         if (C.isLocked = False) then
             -- already unlocked, throw exception to print something
-            Put_Line("Lock_Exception: Already unlocked.");
+            raise MyExceptions.Lock_Exception with "Already unlocked.";
         else
             -- if locked, compare password and try to unlock
             if (PIN."="(PIN.From_String(PINString), C.MasterPIN)) then
                 C.isLocked := False;
             else
                 -- wrong password
-                Put_Line("Lock_Exception: Password is wrong.");
+                raise MyExceptions.Lock_Exception with "Password is wrong.";
             end if;
         end if;
 
@@ -51,7 +50,7 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check whether the string is valid
         if not IsPin(PINString) then
-            Put_Line("PIN_Exception: PIN should be 0000 . . . 9999. ");
+            raise MyExceptions.PIN_Exception with "PIN should be 0000 . . . 9999. ";
         end if;
 
         if (C.isLocked = False) then
@@ -60,7 +59,7 @@ package body MyCalculator with SPARK_Mode is
             C.isLocked := True;
         else
             -- already locked, throw exception to print something
-            Put_Line("Lock_Exception: Already locked.");
+            raise MyExceptions.Lock_Exception with "Already locked.";
         end if;
     end Lock;
 
@@ -75,11 +74,11 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check lock state
         if (C.isLocked = True) then
-            Put_Line("Lock_Exception: Calculator is locked.");
+            raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- check whether the stack is full
             if (C.size >= Max_Size) then
-                Put_Line("Stack_Exception: Stack is full.");
+                raise MyExceptions.Stack_Exception with "Stack is full.";
             end if;
 
             C.size := C.size + 1;
@@ -92,11 +91,11 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check lock state
         if (C.isLocked = True) then
-            Put_Line("Lock_Exception: Calculator is locked.");
+            raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- check whether the stack is empty
             if (C.size <= 0) then
-                Put_Line("Stack_Exception: Stack is empty.");  
+                raise MyExceptions.Stack_Exception with "Stack is empty.";  
             end if;
 
             NumOut := C.storage(C.size);
@@ -114,16 +113,17 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check lock state
         if (C.isLocked = True) then
-            Put_Line("Lock_Exception: Calculator is locked.");
+            raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- check whether the operator is valid
             if not IsValidOperator(Operator) then
-                Put_Line("Operator_Exception: Operator should be +, -, *, /");
+                raise MyExceptions.Operator_Exception with "Operator should be +, -, *, /";
             end if;
 
             -- check whether the stack has enough elements
             if (C.size < 2) then
-                Put_Line("Stack_Exception: Stack has less than 2 elements for calculation.");
+                raise MyExceptions.Stack_Exception 
+                    with "Stack has less than 2 elements for calculation.";
             end if;
 
             -- pop the top two values from the operand stack
@@ -155,7 +155,7 @@ package body MyCalculator with SPARK_Mode is
                         Temp_R := Long_Long_Integer(num1) + Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
-                            Put_Line("Calc_Exception: Addition overflow.");
+                            raise MyExceptions.Calc_Exception with "Addition overflow.";
                         end if;
 
                         -- check addition positive overflow
@@ -175,7 +175,7 @@ package body MyCalculator with SPARK_Mode is
                         Temp_R := Long_Long_Integer(num1) - Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
-                            Put_Line("Calc_Exception: Substraction overflow.");
+                            raise MyExceptions.Calc_Exception with "Substraction overflow.";
                         end if;
 
                         -- check subtraction positive overflow
@@ -195,7 +195,7 @@ package body MyCalculator with SPARK_Mode is
                         Temp_R := Long_Long_Integer(num1) * Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
-                            Put_Line("Calc_Exception: Multiplication overflow.");
+                            raise MyExceptions.Calc_Exception with "Multiplication overflow.";
                         end if;
 
                         -- check multiplication possitive overflow
@@ -214,14 +214,14 @@ package body MyCalculator with SPARK_Mode is
                 elsif Operator = "/" then
                     -- check divide 0
                         if (Num2 = 0) then
-                            Put_Line("Calc_Exception: Divide 0.");
+                            raise MyExceptions.Calc_Exception with "Divide 0.";
                         end if;
 
                         -- check division overflow
                         Temp_R := Long_Long_Integer(num1) / Long_Long_Integer(num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
-                            Put_Line("Calc_Exception: Divition overflow.");
+                            raise MyExceptions.Calc_Exception with "Divition overflow.";
                         end if;
 
                         -- check division overflow
@@ -234,13 +234,13 @@ package body MyCalculator with SPARK_Mode is
 
                 end if;
             -- If calc exception is raised, then push the number back
---              exception
---                  when MyExceptions.Calc_Exception =>
---                      PushNumber(C, Num2);
---                      PushNumber(C, Num1);
---                      NumOut := 0;
---                      -- continuing throw up the exception
---                      raise;
+            exception
+                when MyExceptions.Calc_Exception =>
+                    PushNumber(C, Num2);
+                    PushNumber(C, Num1);
+                    NumOut := 0;
+                    -- continuing throw up the exception
+                    raise;
             end;      
         end if;
     end PerformOperation;
@@ -252,11 +252,11 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check lock state
         if (C.isLocked = True) then
-            Put_Line("Lock_Exception: Calculator is locked.");
+            raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- check whether the string is valid
             if not IsValidVarName(VarString) then
-                Put_Line("Var_Exception: Variable name is invalid.");
+                raise MyExceptions.Var_Exception with "Variable name is invalid.";
             end if;
 
             declare
@@ -266,7 +266,7 @@ package body MyCalculator with SPARK_Mode is
                 -- check whether the variable exists
                 V := VariableStore.From_String(VarString);
                 if not VariableStore.Has_Variable(C.VariableDB, V) then
-                    Put_Line("Var_Exception: Variable does not exist.");
+                    raise MyExceptions.Var_Exception with "Variable does not exist.";
                 else
                     -- If exist, push the value onto the stack
                     Num := VariableStore.Get(C.VariableDB, V);
@@ -284,11 +284,11 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check lock state
         if (C.isLocked = True) then
-            Put_Line("Lock_Exception: Calculator is locked.");
+            raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- check whether the string is valid
             if not IsValidVarName(VarString) then
-                Put_Line("Var_Exception: Variable name is invalid.");
+                raise MyExceptions.Var_Exception with "Variable name is invalid.";
             end if;
 
             declare
@@ -311,11 +311,11 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check lock state
         if (C.isLocked = True) then
-            Put_Line("Lock_Exception: Calculator is locked.");
+            raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- check whether the string is valid
             if not IsValidVarName(VarString) then
-                Put_Line("Var_Exception: Variable name is invalid.");
+                raise MyExceptions.Var_Exception with "Variable name is invalid.";
             end if;
 
             declare
@@ -325,7 +325,7 @@ package body MyCalculator with SPARK_Mode is
                 V := VariableStore.From_String(VarString);
                 Var := V;
                 if not VariableStore.Has_Variable(C.VariableDB, V) then
-                    Put_Line("Var_Exception: Variable does not exist.");
+                    raise MyExceptions.Var_Exception with "Variable does not exist.";
                 else
                     -- remove the variable
                     VariableStore.Remove(C.VariableDB, V);
@@ -339,7 +339,7 @@ package body MyCalculator with SPARK_Mode is
     begin
         -- check lock state
         if (C.isLocked = True) then
-            Put_Line("Lock_Exception: Calculator is locked.");
+            raise MyExceptions.Lock_Exception with "Calculator is locked.";
         else
             -- print out all currently defined variables and their corresponding values
             VariableStore.Print(C.VariableDB);

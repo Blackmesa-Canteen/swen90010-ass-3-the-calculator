@@ -60,7 +60,7 @@ begin
 
       -- validate input: length
       if Lines.Length(S) > MAX_LINE_LENGTH then
-        Put_Line("Syntex_Exception: Input too long!");
+         raise MyExceptions.Syntex_Exception with "Input too long!";
       end if;
 
       -- parse input into tokens array
@@ -69,9 +69,9 @@ begin
       -- parse token
       -- check exceptional line
       if SizeTokens < 1 then
-         Put_Line("Syntex_Exception: Empty entry!");
+         raise MyExceptions.Syntex_Exception with "Empty entry!";
       elsif SizeTokens > 2 then
-         Put_Line("Syntex_Exception: Too much arguments!");
+         raise MyExceptions.Syntex_Exception with "Too much arguments!";
       end if;
 
       -- parse commands and convert into string
@@ -83,7 +83,7 @@ begin
       if CC.IsValidOperator(CommandString) then
          -- check lock status
          if (CC.IsLocked(C)) then
-            Put_Line("Lock_Exception: Calculator is locked!");
+            raise MyExceptions.Lock_Exception with "Calculator is locked!";
          else
             declare
                Result : Integer;
@@ -98,7 +98,7 @@ begin
          if SizeTokens = 1 then
             -- check lock status
             if (CC.IsLocked(C)) then
-               Put_Line("Lock_Exception: Calculator is locked!");
+               raise MyExceptions.Lock_Exception with "Calculator is locked!";
             else
                case Commands'Value(CommandString) is
                   -- pop and show the number
@@ -107,7 +107,7 @@ begin
                         NumOut : Integer;
                      begin
                      if CC.Size(C) <= 0 then
-                        Put_Line("Stack_Exception: Stack is empty!");
+                        raise MyExceptions.Stack_Exception with "Stack is empty!";
                      else
                         CC.PopNumber (C, NumOut);
                         Put_Line(Integer'Image(NumOut));
@@ -119,7 +119,7 @@ begin
 
                   -- other undefined command
                   when others =>
-                     Put_Line("Syntex_Exception: Unrecognized command!");
+                     raise MyExceptions.Syntex_Exception with "Unrecognized command!";
                end case;
             end if;
 
@@ -134,12 +134,12 @@ begin
             if (CommandString = "lock" or CommandString = "unlock") then
                -- Check argument is the valid pin string or not
                if not CC.IsPin(ArgumentString) then
-                  Put_Line("PIN_Exception: PIN should be 0000 . . . 9999. ");
+                  raise MyExceptions.PIN_Exception with "PIN should be 0000 . . . 9999. ";
                else
                   if (CommandString = "lock") then
                      -- if the calculator is already locked, raise exception
                      if (CC.IsLocked(C)) then
-                        Put_Line("Lock_Exception: already locked!");
+                        raise MyExceptions.Lock_Exception with "already locked!";
                      else
                         CC.Lock(C, ArgumentString);
                      end if;
@@ -147,7 +147,7 @@ begin
                   else
                      -- if the calculator is already unlocked, raise exception
                      if not CC.IsLocked(C) then
-                        Put_Line("Lock_Exception: already unlocked!");
+                        raise MyExceptions.Lock_Exception with "already unlocked!";
                      else
                         CC.UnLock(C, ArgumentString);
                      end if;
@@ -158,7 +158,7 @@ begin
             else
                -- check lock status
                if (CC.IsLocked(C)) then
-                  Put_Line("Lock_Exception: Calculator is locked!");
+                  raise MyExceptions.Lock_Exception with "Calculator is locked!";
                else
                   case Commands'Value(CommandString) is
                      -- push the number
@@ -170,7 +170,7 @@ begin
                         NumIn := StringToInteger.From_String(ArgumentString);
                         -- push the value
                         if CC.Size(C) > MAX_STACK_SIZE then
-                           Put_Line("Stack_Exception: Stack is full!");
+                           raise MyExceptions.Stack_Exception with "Stack is full!";
                         else
                            CC.PushNumber(C, NumIn);
                         end if;
@@ -183,7 +183,7 @@ begin
                         begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
-                           Put_Line("Var_Exception: Variable name is invalid.");
+                           raise MyExceptions.Var_Exception with "Variable name is invalid.";
                         else
                             CC.LoadVar(C, ArgumentString, VarOut);
                         end if;
@@ -196,7 +196,7 @@ begin
                         begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
-                           Put_Line("Var_Exception: Variable name is invalid.");
+                           raise MyExceptions.Var_Exception with "Variable name is invalid.";
                         else
                            CC.StoreVar(C, ArgumentString, VarOut);
                         end if;
@@ -209,7 +209,7 @@ begin
                         begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
-                           Put_Line("Var_Exception: Variable name is invalid.");
+                           raise MyExceptions.Var_Exception with "Variable name is invalid.";
                         else
                            CC.removeVar(C, ArgumentString, VarOut);
                         end if;
@@ -217,17 +217,39 @@ begin
 
                      -- other undefined command
                      when others =>
-                        Put_Line("Syntex_Exception: Unrecognized command!");
+                        raise MyExceptions.Syntex_Exception with "Unrecognized command!";
                   end case;
                end if;
             end if;
             end;
          end if;
       else
-         Put_Line("Syntex_Exception: Unrecognized command!");
+         raise MyExceptions.Syntex_Exception with "Unrecognized command!";
       end if;
       end;
    
+   -- deal with exceptions in loop
+   exception
+      -- deal with non-major exceptions without exit system
+      when E : MyExceptions.Lock_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.PIN_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Operator_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Calc_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Var_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Stack_Exception =>
+         Put_Line(Exception_Message (E));
+      when E : MyExceptions.Syntex_Exception =>
+         Put_Line(Exception_Message (E));
+
+      -- deal with major exceptions with exiting system
+      when E : others =>
+         Put_Line(Exception_Message (E));
+         return;
    end;
    end loop;
 
