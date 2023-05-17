@@ -37,16 +37,22 @@ begin
    end if;
 
    -- init the calculator with the PIN from the command line
+   -- The PIN initially provided should always follow the given format
+   if not CC.IsPin(MyCommandLine.Argument(1)) then
+      Put_Line("PIN_Exception: PIN should be 0000 . . . 9999. ");
+      return;
+   end if;
+   
    CC.Init(C, MyCommandLine.Argument(1));
 
    -- the main loop of the calculator
    loop
    declare
       -- Splitting the text into at most 3 tokens
-      Tokens : MyStringTokeniser.TokenArray(1..3) := (others => (Start => 1, Length => 0));
+      Tokens : MyStringTokeniser.TokenArray(1..3) := (others => (Start => 1, Length => 0));  
       SizeTokens : Natural;
-      Command : Lines.MyString := Lines.From_String("");
-      Argument : Lines.MyString := Lines.From_String("");
+      Command : Lines.MyString;
+      Argument : Lines.MyString;
    begin
       -- print the prefix
       if CC.IsLocked(C) then
@@ -66,7 +72,6 @@ begin
 
       -- parse input into tokens array
       MyStringTokeniser.Tokenise(Lines.To_String(S),Tokens,SizeTokens);
-
       -- parse token
       -- check exceptional line
       if SizeTokens < 1 then
@@ -91,7 +96,11 @@ begin
             declare
                Result : Integer;
             begin
-               CC.PerformOperation(C, CommandString, Result);
+               if CC.Size(C) >= 2 then
+                   CC.PerformOperation(C, CommandString, Result);    
+               else
+                   Put_Line("Stack_Exception: Require at least two numbers on stack to do calculation!");
+               end if;
             end;
          end if;
 

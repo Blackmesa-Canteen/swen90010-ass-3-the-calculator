@@ -85,5 +85,4 @@ package body MyString is
       Ada.Text_IO.Get_Line(Item => String(M.Str), Last => M.Length);
    end Get_Line;
 
-
 end MyString;

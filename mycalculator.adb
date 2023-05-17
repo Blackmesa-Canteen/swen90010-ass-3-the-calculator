@@ -7,8 +7,9 @@ package body MyCalculator with SPARK_Mode is
         C.isLocked := True;
 
         -- init master pin
-        C.MasterPIN := PIN.From_String(MasterPINString);
 
+        C.MasterPIN := PIN.From_String(MasterPINString);
+      
         -- point to stack bottom
         C.size := 0;
         -- init stack array
