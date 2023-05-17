@@ -61,6 +61,7 @@ begin
       -- validate input: length
       if Lines.Length(S) > MAX_LINE_LENGTH then
         Put_Line("Syntex_Exception: Input too long!");
+        return;
       end if;
 
       -- parse input into tokens array
@@ -70,8 +71,10 @@ begin
       -- check exceptional line
       if SizeTokens < 1 then
          Put_Line("Syntex_Exception: Empty entry!");
+         return;
       elsif SizeTokens > 2 then
          Put_Line("Syntex_Exception: Too much arguments!");
+         return;
       end if;
 
       -- parse commands and convert into string
@@ -88,7 +91,7 @@ begin
             declare
                Result : Integer;
             begin
-            CC.PerformOperation(C, CommandString, Result);
+               CC.PerformOperation(C, CommandString, Result);
             end;
          end if;
 
@@ -112,11 +115,10 @@ begin
                         CC.PopNumber (C, NumOut);
                         Put_Line(Integer'Image(NumOut));
                      end if;
-                     end;
+                  end;
                   -- list the variable storage
                   when list =>
                      CC.List(C);
-
                   -- other undefined command
                   when others =>
                      Put_Line("Syntex_Exception: Unrecognized command!");
@@ -139,7 +141,7 @@ begin
                   if (CommandString = "lock") then
                      -- if the calculator is already locked, raise exception
                      if (CC.IsLocked(C)) then
-                        Put_Line("Lock_Exception: already locked!");
+                        Put_Line("already locked!");
                      else
                         CC.Lock(C, ArgumentString);
                      end if;
@@ -147,7 +149,7 @@ begin
                   else
                      -- if the calculator is already unlocked, raise exception
                      if not CC.IsLocked(C) then
-                        Put_Line("Lock_Exception: already unlocked!");
+                        Put_Line("already unlocked!");
                      else
                         CC.UnLock(C, ArgumentString);
                      end if;
@@ -174,7 +176,7 @@ begin
                         else
                            CC.PushNumber(C, NumIn);
                         end if;
-                        end;
+                     end;
 
                      -- load the variable
                      when load =>
@@ -184,10 +186,13 @@ begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
                            Put_Line("Var_Exception: Variable name is invalid.");
+                        -- check the stack is full or not
+                        elsif CC.Size(C) > MAX_STACK_SIZE then
+                           Put_Line("Stack_Exception: Stack is full!");
                         else
                             CC.LoadVar(C, ArgumentString, VarOut);
                         end if;
-                        end;
+                     end;
                         
                      -- store the variable
                      when store =>
@@ -197,6 +202,9 @@ begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
                            Put_Line("Var_Exception: Variable name is invalid.");
+                        -- check the stack is empty or not
+                        elsif CC.Size(C) <= 0 then
+                           Put_Line("Stack_Exception: Stack is empty!");
                         else
                            CC.StoreVar(C, ArgumentString, VarOut);
                         end if;
