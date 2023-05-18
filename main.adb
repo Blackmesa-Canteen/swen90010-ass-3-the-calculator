@@ -18,6 +18,7 @@ with Ada.Command_Line;
 with Ada.Characters.Latin_1;
 with Ada.Strings.Fixed;
 
+
 procedure Main is
    MAX_STACK_SIZE : constant Positive := 512;
    MAX_LINE_LENGTH : constant Positive := 2048;
@@ -28,6 +29,12 @@ procedure Main is
    C : CC.MyCalculator;
    package Lines is new MyString(Max_MyString_Length => MAX_LINE_LENGTH + 1);
    S  : Lines.MyString;
+   Tokens : MyStringTokeniser.TokenArray(1..3) := (others => (Start => 1, Length => 0));  
+   SizeTokens : Natural;
+   Command : Lines.MyString;
+   Argument : Lines.MyString;
+   Space_Count: Integer := 0;
+   CommandString: String:= "";
 begin
 
    -- check runtime arguments
@@ -49,12 +56,8 @@ begin
 
    -- the main loop of the calculator
    loop
-   declare
-      -- Splitting the text into at most 3 tokens
-      Tokens : MyStringTokeniser.TokenArray(1..3) := (others => (Start => 1, Length => 0));  
-      SizeTokens : Natural;
-      Command : Lines.MyString;
-      Argument : Lines.MyString;
+   pragma Loop_Invariant(True);
+   pragma Loop_Invariant(CC.IsValidCommand(CommandString) or CommandString = "");
    begin
       -- print the prefix
       if CC.IsLocked(C) then
@@ -65,12 +68,27 @@ begin
 
       -- read a line of input
       Lines.Get_Line(S);
-      if Lines.Length(S) = 0 or Lines.To_String(S)'First >= Lines.To_String(S)'Last then
+      
+      -- Check whether user input is empty 
+      if Lines.Length(S) = 0 or Lines.To_String(S)'First > Lines.To_String(S)'Last then
            Put_Line("Syntex_Exception: Do not provide empty input !");
            return;
       end if;
-       
       
+      -- Check whether user input are full of spaces
+      for c of Lines.To_String(S) loop
+          if c = ' ' and Space_Count < Integer'Last then
+              Space_Count := Space_Count + 1;
+          end if;
+       end loop;
+         
+      -- Check whether user input are full of spaces
+      if Space_Count = Lines.Length(S) then
+          Put_Line("Syntex_Exception: Do not provide input with all spaces!");
+          return;
+      end if;   
+      
+      -- Check whether user input includes 'NUL'   
       for c of Lines.To_String(S) loop
           if c = Ada.Characters.Latin_1.NUL then
               Put_Line("Syntex_Exception: Do not include 'NUL' in your input!");
@@ -98,11 +116,11 @@ begin
 
       -- parse commands and convert into string
       Command := Lines.Substring(S,Tokens(1).Start,Tokens(1).Start+Tokens(1).Length-1);
-      declare
-         CommandString : String := Lines.To_String(Command);
+      CommandString := Lines.To_String(Command);
       
       begin     
       -- If the command is an operator
+         
       if CC.IsValidOperator(CommandString) then
          -- check lock status
          if (CC.IsLocked(C)) then
@@ -112,7 +130,8 @@ begin
                Result : Integer;
             begin
                if CC.Size(C) >= 2 then
-                   CC.PerformOperation(C, CommandString, Result);    
+                   CC.PerformOperation(C, CommandString, Result);
+                   pragma Assert(CC.Storage(C,CC.Size(C)) = Result);     
                else
                    Put_Line("Stack_Exception: Require at least two numbers on stack to do calculation!");
                end if;
@@ -154,7 +173,7 @@ begin
             -- parse the argument
             Argument := Lines.Substring(S,Tokens(2).Start,Tokens(2).Start+Tokens(2).Length-1);
             declare
-               ArgumentString : String := Lines.To_String(Argument);
+                ArgumentString: String := Lines.To_String(Argument);
             begin
             -- handle lock/unlock command logic
             if (CommandString = "lock" or CommandString = "unlock") then
@@ -214,7 +233,8 @@ begin
                         elsif CC.Size(C) > MAX_STACK_SIZE then
                            Put_Line("Stack_Exception: Stack is full!");
                         else
-                            CC.LoadVar(C, ArgumentString, VarOut);
+                           CC.LoadVar(C, ArgumentString, VarOut);
+                           pragma Assert(CC.Storage(C, CC.Size(C)) = VariableStore.Get(CC.GetVarDb(C), VarOut));        
                         end if;
                      end;
                         
@@ -231,6 +251,7 @@ begin
                            Put_Line("Stack_Exception: Stack is empty!");
                         else
                            CC.StoreVar(C, ArgumentString, VarOut);
+                           pragma Assert(CC.Storage(C, CC.Size(C)) = VariableStore.Get(CC.GetVarDb(C), VarOut));   
                         end if;
                         end;
 
@@ -244,6 +265,7 @@ begin
                            Put_Line("Var_Exception: Variable name is invalid.");
                         else
                            CC.removeVar(C, ArgumentString, VarOut);
+                           pragma Assert(CC.Storage(C, CC.Size(C)) = VariableStore.Get(CC.GetVarDb(C), VarOut));   
                         end if;
                         end;
 

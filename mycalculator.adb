@@ -7,7 +7,6 @@ package body MyCalculator with SPARK_Mode is
         C.isLocked := True;
 
         -- init master pin
-
         C.MasterPIN := PIN.From_String(MasterPINString);
       
         -- point to stack bottom

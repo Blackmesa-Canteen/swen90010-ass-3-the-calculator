@@ -2,7 +2,9 @@ with VariableStore;
 with PIN;
 with MyExceptions;
 with Ada.Text_IO; use Ada.Text_IO;
-
+with Ada.Characters.Latin_1;
+with Ada.Containers.Formal_Ordered_Maps;
+with Ada.Containers; use Ada.Containers;
 generic
     Max_Size : Positive;
 
@@ -12,13 +14,14 @@ package MyCalculator with SPARK_Mode is
 
     ------------------- Public Procedures -------------------
     -- initializes the calculator with the given master PIN.
+
     procedure Init(C : out MyCalculator; MasterPINString : in String) with
         -- 1. pin is valid;
         Pre => IsPin(MasterPINString),
         -- 1. stack is empty; 2. pin is set to the given pin; 3. calculator is locked.
         Post => Size(C) = 0 
             and PIN."="(PIN.From_String(MasterPINString), GetPin(C))
-            and IsLocked(C) = True;
+            and IsLocked(C) = True and VariableStore.Length(GetVarDb(C))'Image = "0";
 
     -- unlock the calculator with the given PIN.
     procedure Unlock(C : in out MyCalculator; PINString : in String) with
@@ -162,7 +165,7 @@ private
     -- non-whitespace characters that represents a non-negative number 
     -- (i.e. a natural number) in the range 0000 . . . 9999. 
     function IsPin (S : in String) return Boolean is
-        (S'Length = 4 and IsNumber(S));
+      (S'Length = 4 and IsNumber(S)); 
 
     -- check if the string is a valid operator
     function IsValidOperator(S : in String) return Boolean is
