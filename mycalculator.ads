@@ -132,7 +132,7 @@ package MyCalculator with SPARK_Mode is
     function IsValidVarName(S : in String) return Boolean;
 
     -- check if the string is a valid command for the calc
-    function IsValidCommand (S : in String) return Boolean;
+   function IsValidCommand (S : in String) return Boolean;
 
 private
     type StorageArray is array (Integer range 1..Max_Size) of Item;
@@ -177,9 +177,9 @@ private
 
     -- check if the string is a valid command for the calc
     function IsValidCommand (S : in String) return Boolean is
-        (S = "push" or S = "pop" or S = "load" 
-            or S = "store" or S = "remove" or S = "lock"
-            or S = "unlock" or S = "list");
+       (S = "push" or S = "pop" or S = "load" 
+       or S = "store" or S = "remove" or S = "lock"
+       or S = "unlock" or S = "list");
 
     -- get tgh pin of the calculator
     function GetPin(C : in MyCalculator) return PIN.PIN is

@@ -15,6 +15,8 @@ with VariableStore; use VariableStore;
 
 with Ada.Long_Long_Integer_Text_IO;
 with Ada.Command_Line;
+with Ada.Characters.Latin_1;
+with Ada.Strings.Fixed;
 
 procedure Main is
    MAX_STACK_SIZE : constant Positive := 512;
@@ -63,7 +65,19 @@ begin
 
       -- read a line of input
       Lines.Get_Line(S);
-
+      if Lines.Length(S) = 0 or Lines.To_String(S)'First >= Lines.To_String(S)'Last then
+           Put_Line("Syntex_Exception: Do not provide empty input !");
+           return;
+      end if;
+       
+      
+      for c of Lines.To_String(S) loop
+          if c = Ada.Characters.Latin_1.NUL then
+              Put_Line("Syntex_Exception: Do not include 'NUL' in your input!");
+              return;
+          end if;
+      end loop;
+      
       -- validate input: length
       if Lines.Length(S) > MAX_LINE_LENGTH then
         Put_Line("Syntex_Exception: Input too long!");
@@ -86,7 +100,8 @@ begin
       Command := Lines.Substring(S,Tokens(1).Start,Tokens(1).Start+Tokens(1).Length-1);
       declare
          CommandString : String := Lines.To_String(Command);
-      begin
+      
+      begin     
       -- If the command is an operator
       if CC.IsValidOperator(CommandString) then
          -- check lock status
