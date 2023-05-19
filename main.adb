@@ -56,8 +56,6 @@ begin
 
    -- the main loop of the calculator
    loop
-   pragma Loop_Invariant(True);
-   pragma Loop_Invariant(CC.IsValidCommand(CommandString) or CommandString = "");
    begin
       -- print the prefix
       if CC.IsLocked(C) then
@@ -129,6 +127,7 @@ begin
             declare
                Result : Integer;
             begin
+               pragma Assert(CC.IsLocked(C) = False);
                if CC.Size(C) >= 2 then
                    CC.PerformOperation(C, CommandString, Result);
                    pragma Assert(CC.Storage(C,CC.Size(C)) = Result);     
@@ -146,6 +145,7 @@ begin
             if (CC.IsLocked(C)) then
                Put_Line("Lock_Exception: Calculator is locked!");
             else
+               pragma Assert(CC.IsLocked(C) = False);
                case Commands'Value(CommandString) is
                   -- pop and show the number
                   when pop =>
@@ -187,6 +187,7 @@ begin
                         Put_Line("already locked!");
                      else
                         CC.Lock(C, ArgumentString);
+                        pragma Assert(CC.IsLocked(C) = True);
                      end if;
                      
                   else
@@ -195,6 +196,7 @@ begin
                         Put_Line("already unlocked!");
                      else
                         CC.UnLock(C, ArgumentString);
+                        pragma Assert(CC.IsLocked(C) = False);
                      end if;
                   end if;
                end if;
@@ -205,6 +207,7 @@ begin
                if (CC.IsLocked(C)) then
                   Put_Line("Lock_Exception: Calculator is locked!");
                else
+                  pragma Assert(CC.IsLocked(C) = False);
                   case Commands'Value(CommandString) is
                      -- push the number
                      when push =>
@@ -234,7 +237,7 @@ begin
                            Put_Line("Stack_Exception: Stack is full!");
                         else
                            CC.LoadVar(C, ArgumentString, VarOut);
-                           pragma Assert(CC.Storage(C, CC.Size(C)) = VariableStore.Get(CC.GetVarDb(C), VarOut));        
+                           pragma Assert(VarOut = VariableStore.From_String(ArgumentString));        
                         end if;
                      end;
                         
@@ -251,6 +254,7 @@ begin
                            Put_Line("Stack_Exception: Stack is empty!");
                         else
                            CC.StoreVar(C, ArgumentString, VarOut);
+                           pragma Assert(VarOut = VariableStore.From_String(ArgumentString)); 
                            pragma Assert(CC.Storage(C, CC.Size(C)) = VariableStore.Get(CC.GetVarDb(C), VarOut));   
                         end if;
                         end;
@@ -265,7 +269,8 @@ begin
                            Put_Line("Var_Exception: Variable name is invalid.");
                         else
                            CC.removeVar(C, ArgumentString, VarOut);
-                           pragma Assert(CC.Storage(C, CC.Size(C)) = VariableStore.Get(CC.GetVarDb(C), VarOut));   
+                           pragma Assert(VarOut = VariableStore.From_String(ArgumentString)); 
+                           pragma Assert(not VariableStore.Has_Variable(CC.GetVarDb(C), VarOut));   
                         end if;
                         end;
 

@@ -100,7 +100,7 @@ package body MyCalculator with SPARK_Mode is
                             -- rollback the stack, show error info
                             PushNumber(C, Num2);
                             PushNumber(C, Num1);
-                            NumOut := 0;
+                            NumOut := Storage(C,Size(C));
                             Put_Line("Addition overflow.");
                             return;
                         end if;
@@ -125,7 +125,7 @@ package body MyCalculator with SPARK_Mode is
                             -- rollback the stack, show error info
                             PushNumber(C, Num2);
                             PushNumber(C, Num1);
-                            NumOut := 0;
+                            NumOut := Storage(C,Size(C));
                             Put_Line("Substraction overflow.");
                             return;
                         end if;
@@ -150,7 +150,7 @@ package body MyCalculator with SPARK_Mode is
                             -- rollback the stack, show error info
                             PushNumber(C, Num2);
                             PushNumber(C, Num1);
-                            NumOut := 0;
+                            NumOut := Storage(C,Size(C));
                             Put_Line("Multiplication overflow.");
                             return;
                         end if;
@@ -174,7 +174,7 @@ package body MyCalculator with SPARK_Mode is
                             -- rollback the stack, show error info
                             PushNumber(C, Num2);
                             PushNumber(C, Num1);
-                            NumOut := 0;
+                            NumOut := Storage(C,Size(C));
                             Put_Line("Divition 0.");
                             return;
                         end if;
@@ -186,7 +186,7 @@ package body MyCalculator with SPARK_Mode is
                             -- rollback the stack, show error info
                             PushNumber(C, Num2);
                             PushNumber(C, Num1);
-                            NumOut := 0;
+                            NumOut := Storage(C,Size(C));
                             Put_Line("Divition overflow.");
                             return;
                         end if;
@@ -209,8 +209,8 @@ package body MyCalculator with SPARK_Mode is
         declare
             Num : Item;
         begin
-            if VariableStore.Has_Variable(C.VariableDB, VariableStore.From_String(VarString)) then
-                Var := VariableStore.From_String(VarString);
+            Var := VariableStore.From_String(VarString);
+            if VariableStore.Has_Variable(C.VariableDB, Var) then
                 Num := VariableStore.Get(C.VariableDB, Var);
                 PushNumber(C, Num);
             else
