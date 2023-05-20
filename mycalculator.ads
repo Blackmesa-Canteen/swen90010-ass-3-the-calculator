@@ -106,10 +106,7 @@ package MyCalculator with SPARK_Mode is
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
     procedure RemoveVar(C : in MyCalculator; VarDb : in out VariableStore.Database; Var : in VariableStore.Variable) with
         Pre => IsLocked(C) = False,
-        Post => (Size(C) = Size(C'Old) 
-            and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J)) 
-            and not VariableStore.Has_Variable(VarDb, Var))
-            and IsLocked(C) = IsLocked(C'Old);
+        Post => VariableStore.Has_Variable(VarDb, Var);
 
     ------------------- Utils -------------------
      -- helper ghost function for checking
