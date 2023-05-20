@@ -56,8 +56,7 @@ package body MyCalculator with SPARK_Mode is
     -- operation on them (addition, subtraction, multiplication and division, respectively), 
     -- and push the result onto the stack.
     procedure PerformOperation(C : in out MyCalculator; 
-                               Operator : in String; 
-                               NumOut : out Item) is
+                               Operator : in String) is
     begin
         -- pop the top two values from the operand stack
             declare 
@@ -84,7 +83,6 @@ package body MyCalculator with SPARK_Mode is
                             PushNumber(C, Num2);
                             pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := 0;
                             Put_Line("Addition overflow.");
                             return;
                         end if;
@@ -98,10 +96,8 @@ package body MyCalculator with SPARK_Mode is
                         --  if (not IsNum2Possitive and Num1 < Min_Integer - Num2) then
                         --      raise MyExceptions.Calc_Exception with "Addition overflow.";
                         --  end if;
-
-                        NumOut := Num1 + Num2;
                         pragma Assert (not IsLocked(C));
-                        PushNumber(C, NumOut);
+                        PushNumber(C, Num1 + Num2);
                 elsif Operator = "-" then
                     -- check substraction overflow
                         Temp_R := Long_Long_Integer(Num1) - Long_Long_Integer(Num2);
@@ -112,7 +108,6 @@ package body MyCalculator with SPARK_Mode is
                             PushNumber(C, Num2);
                             pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := 0;
                             Put_Line("Substraction overflow.");
                             return;
                         end if;
@@ -126,10 +121,8 @@ package body MyCalculator with SPARK_Mode is
                         --  if (IsNum2Possitive and Num1 < Min_Integer + Num2) then
                         --      raise MyExceptions.Calc_Exception with "Subtraction overflow.";
                         --  end if;
-
-                        NumOut := Num1 - Num2;
                         pragma Assert (not IsLocked(C));
-                        PushNumber(C, NumOut);
+                        PushNumber(C, Num1 - Num2);
                 elsif Operator = "*" then
                         -- check multiplication overflow
                         if (if Num1 > 0 and Num2 > 0 then Num1 >= (Min_Integer+1)/Num2 and Num1 <= Max_Integer/Num2
@@ -138,21 +131,17 @@ package body MyCalculator with SPARK_Mode is
                                 elsif Num1 < 0 and Num2 < 0 then Num1 <= (Min_Integer+1)/Num2 and Num1 >= Max_Integer/Num2
                                 elsif Num1 = 0 or Num2 = 0 then True
                            ) then
-                            NumOut := Num1 * Num2;
-                            Temp_R := Long_Long_Integer(NumOut);
+                            Temp_R := Long_Long_Integer(Num1) * Long_Long_Integer(Num2);
                             pragma Assert(Temp_R >= Long_Long_Integer(Min_Integer) and Temp_R <= Long_Long_Integer(Max_Integer));
                             -- push the result
                             pragma Assert (not IsLocked(C));
-                            PushNumber(C, NumOut);
+                            PushNumber(C, Num1 * Num2);
                         else
                             -- rollback the stack, show error info
                             pragma Assert (not IsLocked(C));
                             PushNumber(C, Num2);
                             pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := 0;
-                            Temp_R := Long_Long_Integer(NumOut);
-                            pragma Assert(Temp_R = 0);
                             Put_Line("Multiplication overflow.");
                             return; 
                         end if;
@@ -164,7 +153,6 @@ package body MyCalculator with SPARK_Mode is
                             PushNumber(C, Num2);
                             pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := 0;
                             Put_Line("Divition 0.");
                             return;
                         end if;
@@ -178,7 +166,6 @@ package body MyCalculator with SPARK_Mode is
                             PushNumber(C, Num2);
                             pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := 0;
                             Put_Line("Divition overflow.");
                             return;
                         end if;
@@ -187,16 +174,14 @@ package body MyCalculator with SPARK_Mode is
                         --  if (Num1 = Max_Integer and Num2 = -1) then
                         --      raise MyExceptions.Calc_Exception with "Division overflow.";
                         --  end if;
-                        NumOut := Num1 / Num2;
                         pragma Assert (not IsLocked(C));
-                        PushNumber(C, NumOut);
+                        PushNumber(C, Num1 / Num2);
                 else
                         -- rollback the stack, show error info
                         pragma Assert (not IsLocked(C));
                         PushNumber(C, Num2);
                         pragma Assert (not IsLocked(C));
                         PushNumber(C, Num1);
-                        NumOut := 0;
                         Put_Line("Invalid operator.");
                 end if;
             end;

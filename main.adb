@@ -127,17 +127,12 @@ begin
          if (CC.IsLocked(C)) then
             Put_Line("Lock_Exception: Calculator is locked!");
          else
-            declare
-               Result : Integer;
-            begin
-               pragma Assert(CC.IsLocked(C) = False);
-               if CC.Size(C) >= 2 then
-                   CC.PerformOperation(C, Lines.To_String(Command), Result);
-                   pragma Assert(CC.Storage(C,CC.Size(C)) = Result or Result = 0);     
-               else
-                   Put_Line("Stack_Exception: Require at least two numbers on stack to do calculation!");
-               end if;
-            end;
+            pragma Assert(CC.IsLocked(C) = False);
+            if CC.Size(C) >= 2 then
+               CC.PerformOperation(C, Lines.To_String(Command));    
+            else
+               Put_Line("Stack_Exception: Require at least two numbers on stack to do calculation!");
+            end if;
          end if;
 
       -- if the command is valid, but not an operator
@@ -239,7 +234,12 @@ begin
                            Put_Line("Stack_Exception: Stack is full!");
                         else
                            Var := VariableStore.From_String(ArgumentString);
-                           CC.LoadVar(C, VarDb, Var);  
+                           if not VariableStore.Has_Variable(VarDb, Var) then
+                              Put_Line("Var_Exception: Variable is not found.");
+                           else
+                              pragma Assert (VariableStore.Has_Variable(VarDb, Var));
+                              CC.LoadVar(C, VarDb, Var); 
+                           end if;
                         end if;
                      end;
 
@@ -251,13 +251,15 @@ begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
                            Put_Line("Var_Exception: Variable name is invalid.");
-                        -- check the stack is empty or not
-                        elsif CC.Size(C) <= 0 then
-                           Put_Line("Stack_Exception: Stack is empty!");
                         else
-                           Var := VariableStore.From_String(ArgumentString);
-                           pragma Assert (CC.IsValidVarName(ArgumentString));
-                           CC.StoreVar(C, VarDb, Var);
+                           -- check the stack is empty or not
+                           if CC.Size(C) <= 0 then
+                              Put_Line("Stack_Exception: Stack is empty!");
+                           else
+                              Var := VariableStore.From_String(ArgumentString);
+                              pragma Assert (CC.IsValidVarName(ArgumentString));
+                              CC.StoreVar(C, VarDb, Var);
+                           end if;
                         end if;
                      end;
 

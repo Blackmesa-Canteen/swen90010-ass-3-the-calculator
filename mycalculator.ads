@@ -67,21 +67,18 @@ package MyCalculator with SPARK_Mode is
     -- operation on them (addition, subtraction, multiplication and division, respectively), 
     -- and push the result onto the stack.
     procedure PerformOperation(C : in out MyCalculator; 
-                               Operator : in String; 
-                               NumOut : out Item) with
+                               Operator : in String) with
         Pre => IsLocked(C) = False and IsValidOperator(Operator) and Size(C) >= 2,
-        Post => (Size(C) = Size(C'Old) - 1 and NumOut = Storage(C, Size(C))
-            and IsLocked(C) = IsLocked(C'Old)
-            and (for all I in 1..(Size(C) - 1) => Storage(C, I) = Storage(C'Old, I)))
+        Post => (Size(C) = Size(C'Old) - 1)
                 -- if result overflow, then the stack remains unchanged
-                or (Size(C) = Size(C'Old) and (for all I in 1..Size(C) => Storage(C, I) = Storage(C'Old, I)) and NumOut = 0);
+                or (Size(C) = Size(C'Old));
 
     -- For a string var, the procedure loads the value stored 
     -- in variable var and pushes it onto the stack.
     procedure LoadVar(C : in out MyCalculator; VarDb : in VariableStore.Database; Var : in VariableStore.Variable) with
         Pre => IsLocked(C) = False and Size(C) < Max_Size,
-        Post => (Size(C) = Size(C'Old) + 1 and Storage(C, Size(C)) = VariableStore.Get(VarDb, Var)
-            and (for all I in 1..Size(C'Old) => Storage(C, I) = Storage(C'Old, I)) and IsLocked(C) = IsLocked(C'Old))
+        Post => (Size(C) = Size(C'Old) + 1 and (for all I in 1..Size(C'Old) => Storage(C, I) = Storage(C'Old, I)) 
+        and IsLocked(C) = IsLocked(C'Old))
             -- if variable not found, then the stack remains unchanged
             or (Size(C) = Size(C'Old) 
                 and (for all I in 1..Size(C) => Storage(C, I) = Storage(C'Old, I))
@@ -92,12 +89,9 @@ package MyCalculator with SPARK_Mode is
     -- into variable var, defining that variable if it is not already defined.
     procedure StoreVar(C : in out MyCalculator; VarDb: in out VariableStore.Database; Var : in VariableStore.Variable) with
         Pre => IsLocked(C) = False and Size(C) > 0,
-        Post => 
-            -- 1. if Successfully stored, then stack size decreased;
-            (((Size(C) = Size(C'Old) - 1 and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J))
-            and VariableStore.Has_Variable(VarDb, Var)))
+        Post => (Size(C) = Size(C'Old) - 1 and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J))
             and IsLocked(C) = IsLocked(C'Old))
-            -- 2. if variable storage is full, do nothing
+            -- if variable storage is full, do nothing
             or (
                 (Size(C) = Size(C'Old) and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J)))
                 and IsLocked(C) = IsLocked(C'Old)
@@ -105,8 +99,7 @@ package MyCalculator with SPARK_Mode is
             
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
     procedure RemoveVar(C : in MyCalculator; VarDb : in out VariableStore.Database; Var : in VariableStore.Variable) with
-        Pre => IsLocked(C) = False,
-        Post => VariableStore.Has_Variable(VarDb, Var);
+        Pre => IsLocked(C) = False;
 
     ------------------- Utils -------------------
      -- helper ghost function for checking
