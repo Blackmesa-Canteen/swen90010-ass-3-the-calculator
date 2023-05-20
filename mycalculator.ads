@@ -18,7 +18,7 @@ package MyCalculator with SPARK_Mode is
     ------------------- Public Procedures -------------------
     -- initializes the calculator with the given master PIN.
 
-    procedure Init(C : out MyCalculator; MasterPINString : in String) with
+    procedure Init(C : out MyCalculator; VarDb : in VariableStore.Database ;MasterPINString : in String) with
         -- 1. pin is valid;
         Pre => IsPin(MasterPINString),
         -- 1. stack is empty; 2. pin is set to the given pin; 3. calculator is locked.
@@ -106,10 +106,6 @@ package MyCalculator with SPARK_Mode is
             and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J)) 
             and not VariableStore.Has_Variable(GetVarDb(C), Var))
             and IsLocked(C) = IsLocked(C'Old);
-
-    -- prints out all currently defined variables and their corresponding values.
-    procedure List(C : in MyCalculator) with
-        Pre => IsLocked(C) = False;
 
     ------------------- Utils -------------------
      -- helper ghost function for checking

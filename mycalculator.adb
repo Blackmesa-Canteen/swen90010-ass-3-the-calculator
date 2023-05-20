@@ -1,7 +1,7 @@
 package body MyCalculator with SPARK_Mode is
 
     -- Init the calc
-    procedure Init(C : out MyCalculator; MasterPINString : in String) is
+    procedure Init(C : out MyCalculator; VarDb : in VariableStore.Database ;MasterPINString : in String) is
     begin
         -- init master pin
         C.MasterPIN := PIN.From_String(MasterPINString);
@@ -10,9 +10,9 @@ package body MyCalculator with SPARK_Mode is
         C.size := 0;
         -- init stack array
         C.storage := (others => 0);
-
+        
         -- init variable storage
-        VariableStore.Init(C.VariableDB);
+        c.VariableDB := VarDb;
 
         -- default is locked
         C.isLocked := True;
@@ -72,9 +72,6 @@ package body MyCalculator with SPARK_Mode is
             declare 
                 Num1 : Item;
                 Num2 : Item;
-                --  IsNum1Possitive : Boolean;
-                --  IsNum2Possitive : Boolean;
-                --  IsProductPossitive: Boolean;
                 Max_Integer : constant Integer := Integer'Last;
                 Min_Integer : constant Integer := Integer'First;
                 Temp_R : Long_Long_Integer;
@@ -85,18 +82,10 @@ package body MyCalculator with SPARK_Mode is
                 pragma Assert (not IsLocked(C));
                 PopNumber(C, Num2);
 
-                -- check whether the number is possitive
-                --  IsNum1Possitive := (Num1 >= 0);
-                --  IsNum2Possitive := (Num2 >= 0);
-
-                -- check whether the product is possitive or not
-                --  IsProductPossitive := (IsNum1Possitive and IsNum2Possitive) or 
-                --                        (not IsNum1Possitive and not IsNum2Possitive);
-
                  -- compute the corresponding arithmetic operation on them
                 if Operator = "+" then
                      -- check addition overflow
-                        Temp_R := Long_Long_Integer(num1) + Long_Long_Integer(num2);
+                        Temp_R := Long_Long_Integer(Num1) + Long_Long_Integer(Num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
                             -- rollback the stack, show error info
@@ -124,7 +113,7 @@ package body MyCalculator with SPARK_Mode is
                         PushNumber(C, NumOut);
                 elsif Operator = "-" then
                     -- check substraction overflow
-                        Temp_R := Long_Long_Integer(num1) - Long_Long_Integer(num2);
+                        Temp_R := Long_Long_Integer(Num1) - Long_Long_Integer(Num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
                             -- rollback the stack, show error info
@@ -151,22 +140,20 @@ package body MyCalculator with SPARK_Mode is
                         pragma Assert (not IsLocked(C));
                         PushNumber(C, NumOut);
                 elsif Operator = "*" then
-                        -- check multiplication possitive overflow
-                        Declare
-                            IsNum1Possitive : Boolean := (Num1 > 0);
-                            IsNum2Possitive : Boolean := (Num2 > 0);
-                            IsProductPossitive: Boolean;
-                        begin
-                        IsProductPossitive := (Num1 /= 0 and Num2 /= 0) and then (
-                                    (IsNum1Possitive and IsNum2Possitive) 
-                                    or (not IsNum1Possitive and not IsNum2Possitive));
-
-                        if ((Num1 /= 0 and Num2 /= 0) and then
-                            (
-                            (IsProductPossitive and then Num1 > Max_Integer / Num2) 
-                            or (not IsProductPossitive and then Num1 < Min_Integer / Num2)
-                            )
+                        -- check multiplication overflow
+                        if (if Num1 > 0 and Num2 > 0 then Num1 >= (Min_Integer+1)/Num2 and Num1 <= Max_Integer/Num2
+                                elsif Num1 >= 0 and Num2 < 0 then Num1 <= (Min_Integer+1)/Num2 and Num1 >= Max_Integer/Num2
+                                elsif Num1 < 0 and Num2 >= 0 then Num2 <= (Min_Integer+1)/Num1 and Num2 >= Max_Integer/Num1
+                                elsif Num1 < 0 and Num2 < 0 then Num1 <= (Min_Integer+1)/Num2 and Num1 >= Max_Integer/Num2
+                                elsif Num1 = 0 or Num2 = 0 then True
                            ) then
+                            NumOut := Num1 * Num2;
+                            Temp_R := Long_Long_Integer(NumOut);
+                            pragma Assert(Temp_R >= Long_Long_Integer(Min_Integer) and Temp_R <= Long_Long_Integer(Max_Integer));
+                            -- push the result
+                            pragma Assert (not IsLocked(C));
+                            PushNumber(C, NumOut);
+                        else
                             -- rollback the stack, show error info
                             pragma Assert (not IsLocked(C));
                             PushNumber(C, Num2);
@@ -176,26 +163,8 @@ package body MyCalculator with SPARK_Mode is
                             Temp_R := Long_Long_Integer(NumOut);
                             pragma Assert(Temp_R = 0);
                             Put_Line("Multiplication overflow.");
-                            return;
-                        else
-                            NumOut := Num1 * Num2;
-                            Temp_R := Long_Long_Integer(NumOut);
-                            if (Temp_R > Long_Long_Integer(Max_Integer) or 
-                                Temp_R < Long_Long_Integer(Min_Integer)) then
-                                -- rollback the stack, show error info
-                                pragma Assert (not IsLocked(C));
-                                PushNumber(C, Num2);
-                                pragma Assert (not IsLocked(C));
-                                PushNumber(C, Num1);
-                                NumOut := 0;
-                                Put_Line("Mulplication overflow.");
-                                return;
-                            end if;
-                            -- push the result
-                            pragma Assert (not IsLocked(C));
-                            PushNumber(C, NumOut);
+                            return; 
                         end if;
-                        end;
                 elsif Operator = "/" then
                     -- check divide 0
                         if (Num2 = 0) then
@@ -210,7 +179,7 @@ package body MyCalculator with SPARK_Mode is
                         end if;
 
                         -- check division overflow
-                        Temp_R := Long_Long_Integer(num1) / Long_Long_Integer(num2);
+                        Temp_R := Long_Long_Integer(Num1) / Long_Long_Integer(Num2);
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
                             -- rollback the stack, show error info
@@ -294,12 +263,4 @@ package body MyCalculator with SPARK_Mode is
             end if;
         end;
     end RemoveVar;
-
-    -- prints out all currently defined variables and their corresponding values.
-    procedure List(C : in MyCalculator) is
-    begin
-        -- print out all currently defined variables and their corresponding values
-        VariableStore.Print(C.VariableDB);
-    end List;
-
 end MyCalculator;

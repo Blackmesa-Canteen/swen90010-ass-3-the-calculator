@@ -33,7 +33,8 @@ procedure Main is
    SizeTokens : Natural;
    Command : Lines.MyString;
    Argument : Lines.MyString;
-   Space_Count: Integer := 0;
+   Space_Count: Integer;
+   VarDb: VariableStore.Database;
 begin
    -- check runtime arguments
    if ( MyCommandLine.Argument_Count /= 1 ) then
@@ -49,11 +50,13 @@ begin
       Put_Line("PIN_Exception: PIN should be 0000 . . . 9999. ");
       return;
    end if;
-   
-   CC.Init(C, MyCommandLine.Argument(1));
+
+   VariableStore.Init(VarDb);
+   CC.Init(C, VarDb, MyCommandLine.Argument(1));
 
    -- the main loop of the calculator
    loop
+   -- pragma Loop_Invariant (CC.GetVarDb(C) = VarDb);
    begin
       -- print the prefix
       if CC.IsLocked(C) then
@@ -70,7 +73,8 @@ begin
            Put_Line("Syntex_Exception: Do not provide empty input !");
            return;
       end if;
-      
+
+      Space_Count := 0;
       -- Check whether user input are full of spaces
       for c of Lines.To_String(S) loop
           if c = ' ' and Space_Count < Integer'Last then
@@ -159,7 +163,7 @@ begin
                   end;
                elsif Lines.To_String(Command) = "list" then
                   -- list the variable storage
-                  CC.List(C);
+                  VariableStore.Print(CC.GetVarDb(C));
                else
                   -- other undefined command
                   Put_Line("Syntex_Exception: Unrecognized command!");
