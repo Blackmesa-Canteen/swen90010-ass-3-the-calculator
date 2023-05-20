@@ -3,9 +3,6 @@ package body MyCalculator with SPARK_Mode is
     -- Init the calc
     procedure Init(C : out MyCalculator; MasterPINString : in String) is
     begin
-        -- default is locked
-        C.isLocked := True;
-
         -- init master pin
         C.MasterPIN := PIN.From_String(MasterPINString);
       
@@ -16,6 +13,9 @@ package body MyCalculator with SPARK_Mode is
 
         -- init variable storage
         VariableStore.Init(C.VariableDB);
+
+        -- default is locked
+        C.isLocked := True;
 
     end Init;
 
@@ -72,24 +72,26 @@ package body MyCalculator with SPARK_Mode is
             declare 
                 Num1 : Item;
                 Num2 : Item;
-                IsNum1Possitive : Boolean;
-                IsNum2Possitive : Boolean;
-                IsProductPossitive: Boolean;
+                --  IsNum1Possitive : Boolean;
+                --  IsNum2Possitive : Boolean;
+                --  IsProductPossitive: Boolean;
                 Max_Integer : constant Integer := Integer'Last;
                 Min_Integer : constant Integer := Integer'First;
-                Temp_R : Long_Long_Integer := 0;
-            begin
+                Temp_R : Long_Long_Integer;
+            begin                
                 -- pop out the number
+                pragma Assert (not IsLocked(C));
                 PopNumber(C, Num1);
+                pragma Assert (not IsLocked(C));
                 PopNumber(C, Num2);
 
                 -- check whether the number is possitive
-                IsNum1Possitive := (Num1 >= 0);
-                IsNum2Possitive := (Num2 >= 0);
+                --  IsNum1Possitive := (Num1 >= 0);
+                --  IsNum2Possitive := (Num2 >= 0);
 
                 -- check whether the product is possitive or not
-                IsProductPossitive := (IsNum1Possitive and IsNum2Possitive) or 
-                                      (not IsNum1Possitive and not IsNum2Possitive);
+                --  IsProductPossitive := (IsNum1Possitive and IsNum2Possitive) or 
+                --                        (not IsNum1Possitive and not IsNum2Possitive);
 
                  -- compute the corresponding arithmetic operation on them
                 if Operator = "+" then
@@ -98,9 +100,11 @@ package body MyCalculator with SPARK_Mode is
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
                             -- rollback the stack, show error info
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num2);
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := Num1;
+                            NumOut := 0;
                             Put_Line("Addition overflow.");
                             return;
                         end if;
@@ -116,6 +120,7 @@ package body MyCalculator with SPARK_Mode is
                         --  end if;
 
                         NumOut := Num1 + Num2;
+                        pragma Assert (not IsLocked(C));
                         PushNumber(C, NumOut);
                 elsif Operator = "-" then
                     -- check substraction overflow
@@ -123,9 +128,11 @@ package body MyCalculator with SPARK_Mode is
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
                             -- rollback the stack, show error info
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num2);
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := Num1;
+                            NumOut := 0;
                             Put_Line("Substraction overflow.");
                             return;
                         end if;
@@ -141,40 +148,63 @@ package body MyCalculator with SPARK_Mode is
                         --  end if;
 
                         NumOut := Num1 - Num2;
+                        pragma Assert (not IsLocked(C));
                         PushNumber(C, NumOut);
                 elsif Operator = "*" then
-                    -- check multiplication overflow
-                        Temp_R := Long_Long_Integer(num1) * Long_Long_Integer(num2);
-                        if (Temp_R > Long_Long_Integer(Max_Integer) or 
-                            Temp_R < Long_Long_Integer(Min_Integer)) then
+                        -- check multiplication possitive overflow
+                        Declare
+                            IsNum1Possitive : Boolean := (Num1 > 0);
+                            IsNum2Possitive : Boolean := (Num2 > 0);
+                            IsProductPossitive: Boolean;
+                        begin
+                        IsProductPossitive := (Num1 /= 0 and Num2 /= 0) and then (
+                                    (IsNum1Possitive and IsNum2Possitive) 
+                                    or (not IsNum1Possitive and not IsNum2Possitive));
+
+                        if ((Num1 /= 0 and Num2 /= 0) and then
+                            (
+                            (IsProductPossitive and then Num1 > Max_Integer / Num2) 
+                            or (not IsProductPossitive and then Num1 < Min_Integer / Num2)
+                            )
+                           ) then
                             -- rollback the stack, show error info
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num2);
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := Num1;
+                            NumOut := 0;
+                            Temp_R := Long_Long_Integer(NumOut);
+                            pragma Assert(Temp_R = 0);
                             Put_Line("Multiplication overflow.");
                             return;
+                        else
+                            NumOut := Num1 * Num2;
+                            Temp_R := Long_Long_Integer(NumOut);
+                            if (Temp_R > Long_Long_Integer(Max_Integer) or 
+                                Temp_R < Long_Long_Integer(Min_Integer)) then
+                                -- rollback the stack, show error info
+                                pragma Assert (not IsLocked(C));
+                                PushNumber(C, Num2);
+                                pragma Assert (not IsLocked(C));
+                                PushNumber(C, Num1);
+                                NumOut := 0;
+                                Put_Line("Mulplication overflow.");
+                                return;
+                            end if;
+                            -- push the result
+                            pragma Assert (not IsLocked(C));
+                            PushNumber(C, NumOut);
                         end if;
-
-                        -- check multiplication possitive overflow
-                        --  if (IsProductPossitive and Num1 > Max_Integer / Num2) then
-                        --      raise MyExceptions.Calc_Exception with "Multiplication overflow.";
-                        --  end if;
-
-                        -- check multiplication negative overflow
-                        --  if (not IsProductPossitive and Num1 < Min_Integer / Num2) then
-                        --      raise MyExceptions.Calc_Exception with "Multiplication overflow.";
-                        --  end if;
-
-                        NumOut := Num1 * Num2;
-                        PushNumber(C, NumOut);
-
+                        end;
                 elsif Operator = "/" then
                     -- check divide 0
                         if (Num2 = 0) then
                             -- rollback the stack, show error info
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num2);
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := Num1;
+                            NumOut := 0;
                             Put_Line("Divition 0.");
                             return;
                         end if;
@@ -184,9 +214,11 @@ package body MyCalculator with SPARK_Mode is
                         if (Temp_R > Long_Long_Integer(Max_Integer) or 
                             Temp_R < Long_Long_Integer(Min_Integer)) then
                             -- rollback the stack, show error info
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num2);
+                            pragma Assert (not IsLocked(C));
                             PushNumber(C, Num1);
-                            NumOut := Num1;
+                            NumOut := 0;
                             Put_Line("Divition overflow.");
                             return;
                         end if;
@@ -196,7 +228,16 @@ package body MyCalculator with SPARK_Mode is
                         --      raise MyExceptions.Calc_Exception with "Division overflow.";
                         --  end if;
                         NumOut := Num1 / Num2;
+                        pragma Assert (not IsLocked(C));
                         PushNumber(C, NumOut);
+                else
+                        -- rollback the stack, show error info
+                        pragma Assert (not IsLocked(C));
+                        PushNumber(C, Num2);
+                        pragma Assert (not IsLocked(C));
+                        PushNumber(C, Num1);
+                        NumOut := 0;
+                        Put_Line("Invalid operator.");
                 end if;
             end;
     end PerformOperation;

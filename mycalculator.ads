@@ -5,6 +5,8 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with Ada.Containers.Formal_Ordered_Maps;
 with Ada.Containers; use Ada.Containers;
+with Ada.Strings.Fixed;
+use Ada.Strings.Fixed;
 generic
     Max_Size : Positive;
 
@@ -47,7 +49,8 @@ package MyCalculator with SPARK_Mode is
         -- 1. stack size increased; 2. the top of the stack is the pushed number.
         -- 3. other elements remain unchanged.
         Post => Size(C) = Size(C'Old) + 1 and Storage(C, Size(C)) = NumIn
-            and (for all I in 1..Size(C'Old) => Storage(C, I) = Storage(C'Old, I));
+            and (for all I in 1..Size(C'Old) => Storage(C, I) = Storage(C'Old, I))
+            and IsLocked(C) = IsLocked(C'Old);
 
     -- pops the value from the top of the operand stack, discarding it.
     procedure PopNumber(C : in out MyCalculator; NumOut : out Item) with
@@ -56,7 +59,8 @@ package MyCalculator with SPARK_Mode is
         -- 1. stack size decreased; 2. the popped number is the top of the stack.
         -- 3. other elements remain unchanged.
         Post => Size(C) = Size(C'Old) - 1 and NumOut = Storage(C'Old, Size(C'Old))
-            and (for all I in 1..Max_Size => Storage(C, I) = Storage(C'Old, I));
+            and (for all I in 1..Max_Size => Storage(C, I) = Storage(C'Old, I))
+            and IsLocked(C) = IsLocked(C'Old);
 
     -- The commands “+”, “-”, “*” and “/” each pop the top two values 
     -- from the operand stack and compute the corresponding arithmetic 
@@ -67,18 +71,22 @@ package MyCalculator with SPARK_Mode is
                                NumOut : out Item) with
         Pre => IsLocked(C) = False and IsValidOperator(Operator) and Size(C) >= 2,
         Post => (Size(C) = Size(C'Old) - 1 and NumOut = Storage(C, Size(C))
+            and IsLocked(C) = IsLocked(C'Old)
             and (for all I in 1..(Size(C) - 1) => Storage(C, I) = Storage(C'Old, I)))
                 -- if result overflow, then the stack remains unchanged
-                or (Size(C) = Size(C'Old) and (for all I in 1..Size(C) => Storage(C, I) = Storage(C'Old, I)));
+                or (Size(C) = Size(C'Old) and (for all I in 1..Size(C) => Storage(C, I) = Storage(C'Old, I)) and NumOut = 0);
 
     -- For a string var, the procedure loads the value stored 
     -- in variable var and pushes it onto the stack.
     procedure LoadVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable) with
         Pre => IsLocked(C) = False and IsValidVarName(VarString) and Size(C) < Max_Size,
         Post => (Size(C) = Size(C'Old) + 1 and Storage(C, Size(C)) = VariableStore.Get(GetVarDb(C), Var)
-            and (for all I in 1..Size(C'Old) => Storage(C, I) = Storage(C'Old, I)))
+            and (for all I in 1..Size(C'Old) => Storage(C, I) = Storage(C'Old, I)) and IsLocked(C) = IsLocked(C'Old))
             -- if variable not found, then the stack remains unchanged
-            or (Size(C) = Size(C'Old) and (for all I in 1..Size(C) => Storage(C, I) = Storage(C'Old, I)));
+            or (Size(C) = Size(C'Old) 
+                and (for all I in 1..Size(C) => Storage(C, I) = Storage(C'Old, I))
+                and IsLocked(C) = IsLocked(C'Old)
+                );
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
@@ -87,14 +95,16 @@ package MyCalculator with SPARK_Mode is
         Post => ((Size(C) = Size(C'Old) - 1 
             and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J))
             and VariableStore.Has_Variable(GetVarDb(C), VariableStore.From_String(VarString)) 
-            and VariableStore.Get(GetVarDb(C), Var) = Storage(C'Old, Size(C'Old))));
+            and VariableStore.Get(GetVarDb(C), Var) = Storage(C'Old, Size(C'Old))))
+            and IsLocked(C) = IsLocked(C'Old);
             
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
     procedure RemoveVar(C : in out MyCalculator; VarString: String; Var : out VariableStore.Variable) with
         Pre => IsLocked(C) = False and then IsValidVarName(VarString),
         Post => (Size(C) = Size(C'Old) 
             and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J)) 
-            and not VariableStore.Has_Variable(GetVarDb(C), Var));
+            and not VariableStore.Has_Variable(GetVarDb(C), Var))
+            and IsLocked(C) = IsLocked(C'Old);
 
     -- prints out all currently defined variables and their corresponding values.
     procedure List(C : in MyCalculator) with
@@ -165,7 +175,7 @@ private
     -- non-whitespace characters that represents a non-negative number 
     -- (i.e. a natural number) in the range 0000 . . . 9999. 
     function IsPin (S : in String) return Boolean is
-      (S'Length = 4 and IsNumber(S)); 
+      (S'Length = 4 and Index_Non_Blank (S) /= 0 and IsNumber(S)); 
 
     -- check if the string is a valid operator
     function IsValidOperator(S : in String) return Boolean is

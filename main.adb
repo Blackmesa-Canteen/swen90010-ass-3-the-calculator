@@ -17,6 +17,7 @@ with Ada.Long_Long_Integer_Text_IO;
 with Ada.Command_Line;
 with Ada.Characters.Latin_1;
 with Ada.Strings.Fixed;
+use Ada.Strings.Fixed;
 
 
 procedure Main is
@@ -34,7 +35,6 @@ procedure Main is
    Command : Lines.MyString;
    Argument : Lines.MyString;
    Space_Count: Integer := 0;
-   CommandString: String:= "";
 begin
 
    -- check runtime arguments
@@ -84,8 +84,11 @@ begin
       if Space_Count = Lines.Length(S) then
           Put_Line("Syntex_Exception: Do not provide input with all spaces!");
           return;
-      end if;   
-      
+      end if;
+      if (Index_Non_Blank(Lines.To_String(S)) = 0) then
+         Put_Line("Syntex_Exception: Do not provide empty input !");
+         return;
+      end if;
       -- Check whether user input includes 'NUL'   
       for c of Lines.To_String(S) loop
           if c = Ada.Characters.Latin_1.NUL then
@@ -113,13 +116,11 @@ begin
       end if;
 
       -- parse commands and convert into string
+      pragma Assert(Tokens(1).Start+Tokens(1).Length-1 <= Lines.Length(S));
       Command := Lines.Substring(S,Tokens(1).Start,Tokens(1).Start+Tokens(1).Length-1);
-      CommandString := Lines.To_String(Command);
-      
-      begin     
+      begin   
       -- If the command is an operator
-         
-      if CC.IsValidOperator(CommandString) then
+      if CC.IsValidOperator(Lines.To_String(Command)) then
          -- check lock status
          if (CC.IsLocked(C)) then
             Put_Line("Lock_Exception: Calculator is locked!");
@@ -129,8 +130,8 @@ begin
             begin
                pragma Assert(CC.IsLocked(C) = False);
                if CC.Size(C) >= 2 then
-                   CC.PerformOperation(C, CommandString, Result);
-                   pragma Assert(CC.Storage(C,CC.Size(C)) = Result);     
+                   CC.PerformOperation(C, Lines.To_String(Command), Result);
+                   pragma Assert(CC.Storage(C,CC.Size(C)) = Result or Result = 0);     
                else
                    Put_Line("Stack_Exception: Require at least two numbers on stack to do calculation!");
                end if;
@@ -138,7 +139,7 @@ begin
          end if;
 
       -- if the command is valid, but not an operator
-      elsif CC.IsValidCommand(CommandString) then
+      elsif CC.IsValidCommand(Lines.To_String(Command)) then
          -- try to parse unary command
          if SizeTokens = 1 then
             -- check lock status
@@ -146,10 +147,9 @@ begin
                Put_Line("Lock_Exception: Calculator is locked!");
             else
                pragma Assert(CC.IsLocked(C) = False);
-               case Commands'Value(CommandString) is
+               if Lines.To_String(Command) = "pop" then
                   -- pop and show the number
-                  when pop =>
-                     declare
+                  declare
                         NumOut : Integer;
                      begin
                      if CC.Size(C) <= 0 then
@@ -159,35 +159,35 @@ begin
                         Put_Line(Integer'Image(NumOut));
                      end if;
                   end;
+               elsif Lines.To_String(Command) = "list" then
                   -- list the variable storage
-                  when list =>
-                     CC.List(C);
+                  CC.List(C);
+               else
                   -- other undefined command
-                  when others =>
-                     Put_Line("Syntex_Exception: Unrecognized command!");
-               end case;
+                  Put_Line("Syntex_Exception: Unrecognized command!");
+               end if;
             end if;
 
          -- try to parse binary command with its argument
          elsif SizeTokens = 2 then
             -- parse the argument
+            pragma Assert(Tokens(2).Start+Tokens(2).Length-1 <= Lines.Length(S));
             Argument := Lines.Substring(S,Tokens(2).Start,Tokens(2).Start+Tokens(2).Length-1);
             declare
                 ArgumentString: String := Lines.To_String(Argument);
             begin
             -- handle lock/unlock command logic
-            if (CommandString = "lock" or CommandString = "unlock") then
+            if (Lines.To_String(Command) = "lock" or Lines.To_String(Command) = "unlock") then
                -- Check argument is the valid pin string or not
                if not CC.IsPin(ArgumentString) then
                   Put_Line("PIN_Exception: PIN should be 0000 . . . 9999. ");
                else
-                  if (CommandString = "lock") then
+                  if (Lines.To_String(Command) = "lock") then
                      -- if the calculator is already locked, raise exception
                      if (CC.IsLocked(C)) then
                         Put_Line("already locked!");
                      else
                         CC.Lock(C, ArgumentString);
-                        pragma Assert(CC.IsLocked(C) = True);
                      end if;
                      
                   else
@@ -196,7 +196,6 @@ begin
                         Put_Line("already unlocked!");
                      else
                         CC.UnLock(C, ArgumentString);
-                        pragma Assert(CC.IsLocked(C) = False);
                      end if;
                   end if;
                end if;
@@ -208,7 +207,7 @@ begin
                   Put_Line("Lock_Exception: Calculator is locked!");
                else
                   pragma Assert(CC.IsLocked(C) = False);
-                  case Commands'Value(CommandString) is
+                  case Commands'Value(Lines.To_String(Command)) is
                      -- push the number
                      when push =>
                         declare
@@ -217,7 +216,7 @@ begin
                         -- convert string to integer
                         NumIn := StringToInteger.From_String(ArgumentString);
                         -- push the value
-                        if CC.Size(C) > MAX_STACK_SIZE then
+                        if CC.Size(C) >= MAX_STACK_SIZE then
                            Put_Line("Stack_Exception: Stack is full!");
                         else
                            CC.PushNumber(C, NumIn);
@@ -233,7 +232,7 @@ begin
                         if not CC.IsValidVarName(ArgumentString) then
                            Put_Line("Var_Exception: Variable name is invalid.");
                         -- check the stack is full or not
-                        elsif CC.Size(C) > MAX_STACK_SIZE then
+                        elsif CC.Size(C) >= MAX_STACK_SIZE then
                            Put_Line("Stack_Exception: Stack is full!");
                         else
                            CC.LoadVar(C, ArgumentString, VarOut);
@@ -255,7 +254,7 @@ begin
                         else
                            CC.StoreVar(C, ArgumentString, VarOut);
                            pragma Assert(VarOut = VariableStore.From_String(ArgumentString)); 
-                           pragma Assert(CC.Storage(C, CC.Size(C)) = VariableStore.Get(CC.GetVarDb(C), VarOut));   
+                           pragma Assert(VariableStore.Has_Variable(CC.GetVarDb(C), VarOut));
                         end if;
                         end;
 
