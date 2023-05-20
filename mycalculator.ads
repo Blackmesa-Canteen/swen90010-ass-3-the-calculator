@@ -90,12 +90,18 @@ package MyCalculator with SPARK_Mode is
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
-    procedure StoreVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable) with
-        Pre => IsLocked(C) = False and IsValidVarName(VarString) and Size(C) > 0,
-        Post => ((Size(C) = Size(C'Old) - 1 
-            and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J))
-            and VariableStore.Has_Variable(GetVarDb(C), VariableStore.From_String(VarString))))
-            and IsLocked(C) = IsLocked(C'Old);
+    procedure StoreVar(C : in out MyCalculator; Var : in VariableStore.Variable) with
+        Pre => IsLocked(C) = False and Size(C) > 0,
+        Post => 
+            -- 1. if Successfully stored, then stack size decreased;
+            (((Size(C) = Size(C'Old) - 1 and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J))
+            and VariableStore.Has_Variable(GetVarDb(C), Var)))
+            and IsLocked(C) = IsLocked(C'Old))
+            -- 2. if variable storage is full, do nothing
+            or (
+                (Size(C) = Size(C'Old) and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J)))
+                and IsLocked(C) = IsLocked(C'Old)
+            );
             
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
     procedure RemoveVar(C : in out MyCalculator; VarString: String; Var : out VariableStore.Variable) with

@@ -226,19 +226,21 @@ package body MyCalculator with SPARK_Mode is
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
-    procedure StoreVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable) is
+    procedure StoreVar(C : in out MyCalculator; Var : in VariableStore.Variable) is
     begin
         declare
-            V : VariableStore.Variable;
             Num : Item;
         begin
-            -- pop the value from the top of the stack
-            PopNumber(C, Num);
+            if (VariableStore.Length(C.VariableDB) < VariableStore.Max_Entries or VariableStore.Has_Variable(C.VariableDB,Var)) then
+                -- pop the value from the top of the stack
+                PopNumber(C, Num);
 
-            -- store the value into variable var
-            V := VariableStore.From_String(VarString);
-            Var := V;
-            VariableStore.Put(C.VariableDB, V, Num);
+                pragma Assert(VariableStore.Length(C.VariableDB) < VariableStore.Max_Entries or VariableStore.Has_Variable(C.VariableDB,Var));
+                -- store the value into variable var
+                VariableStore.Put(C.VariableDB, Var, Num);
+            else
+                Put_Line("Varable store is full.");
+            end if;
         end;
     
     end StoreVar;

@@ -248,7 +248,7 @@ begin
                   elsif Lines.To_String(Command) = "store" then
                      -- store the variable
                      declare
-                           VarOut : VariableStore.Variable;
+                           Var : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
@@ -257,10 +257,9 @@ begin
                         elsif CC.Size(C) <= 0 then
                            Put_Line("Stack_Exception: Stack is empty!");
                         else
-                           CC.StoreVar(C, ArgumentString, VarOut);
-                           if not VariableStore.Has_Variable(CC.GetVarDb(C), VarOut) then
-                              Put_Line("Var_Exception: VarOut is not in the database!");
-                           end if;
+                           Var := VariableStore.From_String(ArgumentString);
+                           pragma Assert (CC.IsValidVarName(ArgumentString));
+                           CC.StoreVar(C, Var);
                         end if;
                      end;
 
