@@ -134,7 +134,8 @@ package body MyCalculator with SPARK_Mode is
                                 pragma Assert (not IsLocked(C));
                                 PushNumber(C, 0);
                             elsif (IsProductPositive) then
-                                if (Num1 > Max_Integer / Num2) then
+                                if ((Num1 > Max_Integer / Num2) and (Num1 > 0 and Num2 > 0)) 
+                                or ((Num1 < Max_Integer / Num2) and (Num1 < 0 and Num2 < 0)) then
                                     -- rollback the stack, show error info
                                     pragma Assert (not IsLocked(C));
                                     PushNumber(C, Num2);
@@ -146,7 +147,10 @@ package body MyCalculator with SPARK_Mode is
                                     PushNumber(C, Num1 * Num2);
                                 end if;  
                             elsif (IsProductNegative) then
-                                if (Num1 < Min_Integer / Num2) then
+                                if (Num1 < (Min_Integer + 1) / Num2) 
+                                or (Num2 < (Min_Integer + 1) / Num1)
+                                or (Num1 = -1 and Num2 = Max_Integer)
+                                or (Num2 = -1 and Num1 = Max_Integer) then
                                     -- rollback the stack, show error info
                                     pragma Assert (not IsLocked(C));
                                     PushNumber(C, Num2);
