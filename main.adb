@@ -25,7 +25,6 @@ procedure Main is
    MAX_LINE_LENGTH : constant Positive := 2048;
    LOCKED_PREFIX : constant String := "locked> ";
    UNLOCKED_PREFIX : constant String := "unlocked> ";
-   type Commands is (push, pop, load, store, remove, lock, unlock, list);
    package CC is new MyCalculator(MAX_STACK_SIZE);
    C : CC.MyCalculator;
    package Lines is new MyString(Max_MyString_Length => MAX_LINE_LENGTH + 1);
@@ -36,7 +35,6 @@ procedure Main is
    Argument : Lines.MyString;
    Space_Count: Integer := 0;
 begin
-
    -- check runtime arguments
    if ( MyCommandLine.Argument_Count /= 1 ) then
       Put_Line("Usage: "); 
@@ -207,10 +205,9 @@ begin
                   Put_Line("Lock_Exception: Calculator is locked!");
                else
                   pragma Assert(CC.IsLocked(C) = False);
-                  case Commands'Value(Lines.To_String(Command)) is
-                     -- push the number
-                     when push =>
-                        declare
+                  if Lines.To_String(Command) = "push" then
+                     -- push the val
+                     declare
                            NumIn : Integer;
                         begin
                         -- convert string to integer
@@ -223,9 +220,9 @@ begin
                         end if;
                      end;
 
+                  elsif Lines.To_String(Command) = "load" then
                      -- load the variable
-                     when load =>
-                        declare
+                     declare
                            VarOut : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
@@ -239,10 +236,10 @@ begin
                            pragma Assert(VarOut = VariableStore.From_String(ArgumentString));        
                         end if;
                      end;
-                        
+
+                  elsif Lines.To_String(Command) = "store" then
                      -- store the variable
-                     when store =>
-                        declare
+                     declare
                            VarOut : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
@@ -256,11 +253,11 @@ begin
                            pragma Assert(VarOut = VariableStore.From_String(ArgumentString)); 
                            pragma Assert(VariableStore.Has_Variable(CC.GetVarDb(C), VarOut));
                         end if;
-                        end;
+                     end;
 
+                  elsif Lines.To_String(Command) = "remove" then
                      -- remove the variable
-                     when remove =>
-                        declare
+                     declare
                            VarOut : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
@@ -271,12 +268,11 @@ begin
                            pragma Assert(VarOut = VariableStore.From_String(ArgumentString)); 
                            pragma Assert(not VariableStore.Has_Variable(CC.GetVarDb(C), VarOut));   
                         end if;
-                        end;
-
+                     end;
+                  else
                      -- other undefined command
-                     when others =>
-                        Put_Line("Syntex_Exception: Unrecognized command!");
-                  end case;
+                     Put_Line("Syntex_Exception: Unrecognized command!");
+                  end if;
                end if;
             end if;
             end;
