@@ -125,26 +125,40 @@ package body MyCalculator with SPARK_Mode is
                         PushNumber(C, Num1 - Num2);
                 elsif Operator = "*" then
                         -- check multiplication overflow
-                        if (if Num1 > 0 and Num2 > 0 then Num1 >= (Min_Integer+1)/Num2 and Num1 <= Max_Integer/Num2
-                                elsif Num1 >= 0 and Num2 < 0 then Num1 <= (Min_Integer+1)/Num2 and Num1 >= Max_Integer/Num2
-                                elsif Num1 < 0 and Num2 >= 0 then Num2 <= (Min_Integer+1)/Num1 and Num2 >= Max_Integer/Num1
-                                elsif Num1 < 0 and Num2 < 0 then Num1 <= (Min_Integer+1)/Num2 and Num1 >= Max_Integer/Num2
-                                elsif Num1 = 0 or Num2 = 0 then True
-                           ) then
-                            Temp_R := Long_Long_Integer(Num1) * Long_Long_Integer(Num2);
-                            pragma Assert(Temp_R >= Long_Long_Integer(Min_Integer) and Temp_R <= Long_Long_Integer(Max_Integer));
-                            -- push the result
-                            pragma Assert (not IsLocked(C));
-                            PushNumber(C, Num1 * Num2);
-                        else
-                            -- rollback the stack, show error info
-                            pragma Assert (not IsLocked(C));
-                            PushNumber(C, Num2);
-                            pragma Assert (not IsLocked(C));
-                            PushNumber(C, Num1);
-                            Put_Line("Multiplication overflow.");
-                            return; 
-                        end if;
+                        declare
+                            IsProductZero : Boolean := (Num1 = 0 or Num2 = 0);
+                            IsProductPositive : Boolean := (Num1 > 0 and Num2 > 0) or (Num1 < 0 and Num2 < 0);
+                            IsProductNegative : Boolean := (Num1 > 0 and Num2 < 0) or (Num1 < 0 and Num2 > 0);
+                        begin
+                            if (IsProductZero) then
+                                pragma Assert (not IsLocked(C));
+                                PushNumber(C, 0);
+                            elsif (IsProductPositive) then
+                                if (Num1 > Max_Integer / Num2) then
+                                    -- rollback the stack, show error info
+                                    pragma Assert (not IsLocked(C));
+                                    PushNumber(C, Num2);
+                                    pragma Assert (not IsLocked(C));
+                                    PushNumber(C, Num1);
+                                    Put_Line("Multiplication overflow.");
+                                else
+                                    pragma Assert (not IsLocked(C));
+                                    PushNumber(C, Num1 * Num2);
+                                end if;  
+                            elsif (IsProductNegative) then
+                                if (Num1 < Min_Integer / Num2) then
+                                    -- rollback the stack, show error info
+                                    pragma Assert (not IsLocked(C));
+                                    PushNumber(C, Num2);
+                                    pragma Assert (not IsLocked(C));
+                                    PushNumber(C, Num1);
+                                    Put_Line("Multiplication overflow.");
+                                else
+                                    pragma Assert (not IsLocked(C));
+                                    PushNumber(C, Num1 * Num2);
+                                end if;
+                            end if;
+                        end;
                 elsif Operator = "/" then
                     -- check divide 0
                         if (Num2 = 0) then
