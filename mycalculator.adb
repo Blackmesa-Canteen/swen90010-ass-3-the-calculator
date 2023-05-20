@@ -20,10 +20,10 @@ package body MyCalculator with SPARK_Mode is
     end Init;
 
     -- try unlock. 
-    procedure Unlock(C : in out MyCalculator; PINString : in String)is
+    procedure Unlock(C : in out MyCalculator; PinIn : PIN.PIN)is
     begin
         -- if locked, compare password and try to unlock
-        if (PIN."="(PIN.From_String(PINString), C.MasterPIN)) then
+        if (PIN."="(PinIn, C.MasterPIN)) then
             C.isLocked := False;
         else
             -- wrong password
@@ -33,10 +33,10 @@ package body MyCalculator with SPARK_Mode is
     end Unlock;
 
     -- try lock
-    procedure Lock(C : in out MyCalculator; PINString : in String) is
+    procedure Lock(C : in out MyCalculator; PinIn : PIN.PIN) is
     begin
         -- set a new master pin, and then lock the calculator
-        C.MasterPIN := PIN.From_String(PINString);
+        C.MasterPIN := PinIn;
         C.isLocked := True;
     end Lock;
 

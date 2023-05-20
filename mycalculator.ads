@@ -24,24 +24,23 @@ package MyCalculator with SPARK_Mode is
         -- 1. stack is empty; 2. pin is set to the given pin; 3. calculator is locked.
         Post => Size(C) = 0 
             and PIN."="(PIN.From_String(MasterPINString), GetPin(C))
-            and IsLocked(C) = True and VariableStore.Length(GetVarDb(C))'Image = "0";
+            and IsLocked(C) = True;
 
     -- unlock the calculator with the given PIN.
-    procedure Unlock(C : in out MyCalculator; PINString : in String) with
+    procedure Unlock(C : in out MyCalculator; PinIn : PIN.PIN) with
         -- 1. pin is valid; 2. calculator is locked.
-        Pre => IsPin(PINString) and IsLocked(C) = True,
-        -- 1. calculator is unlocked; 2. pin remains unchanged.
-        Post => ((PIN."="(PIN.From_String(PINString), GetPin(C))) and IsLocked(C) = False 
-                    and PIN."="(GetPin(C), GetPin(C'Old))) 
-                    -- 2. if password wrong, remains locked
-                    or (IsLocked(C) = True and not PIN."="(GetPin(C), GetPin(C'Old)));
+        Pre => IsLocked(C) = True,
+        -- 1. calculator is unlocked;
+        Post => (PIN."="(PinIn, GetPin(C)) and then IsLocked(C) = False)
+                -- 2. if password wrong, remains locked
+                or (not PIN."="(PinIn, GetPin(C)) and then IsLocked(C) = True);
 
     -- lock and update the master pin.
-    procedure Lock(C : in out MyCalculator; PINString : in String) with
+    procedure Lock(C : in out MyCalculator; PinIn : PIN.PIN) with
         -- 1. pin is valid; 2. calculator is unlocked.
-        Pre => IsPin(PINString) and IsLocked(C) = False,
+        Pre => IsLocked(C) = False,
         -- 1. calculator is locked; 2. pin is set to the given pin.
-        Post => IsLocked(C) = True and PIN."="(PIN.From_String(PINString), GetPin(C));
+        Post => IsLocked(C) = True and PIN."="(PinIn, GetPin(C));
 
     -- pushes the number value onto operand stack.
     procedure PushNumber(C : in out MyCalculator; NumIn : in Item) with
@@ -95,8 +94,7 @@ package MyCalculator with SPARK_Mode is
         Pre => IsLocked(C) = False and IsValidVarName(VarString) and Size(C) > 0,
         Post => ((Size(C) = Size(C'Old) - 1 
             and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J))
-            and VariableStore.Has_Variable(GetVarDb(C), VariableStore.From_String(VarString)) 
-            and VariableStore.Get(GetVarDb(C), Var) = Storage(C'Old, Size(C'Old))))
+            and VariableStore.Has_Variable(GetVarDb(C), VariableStore.From_String(VarString))))
             and IsLocked(C) = IsLocked(C'Old);
             
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
@@ -124,9 +122,6 @@ package MyCalculator with SPARK_Mode is
 
     -- get var db
     function GetVarDb(C : in MyCalculator) return VariableStore.Database;
-
-    -- helper function for checking if the string is a valid number
-    function IsNumber (S : in String) return Boolean;
    
     -- check if the string is a valid pin, is a 4-digit string of 
     -- non-whitespace characters that represents a non-negative number 
@@ -166,18 +161,13 @@ private
     -- Get whether is locked or not
     function IsLocked(C : in MyCalculator) return Boolean is
         (C.isLocked);
-
-    -- helper function for checking if the string is a valid number
-    function IsNumber (S: in String) return Boolean is
-        (for all I in S'Range => 
-            S(I) >= '0' and S(I) <= '9');
    
     -- check if the string is a valid pin, is a 4-digit string of 
     -- non-whitespace characters that represents a non-negative number 
     -- (i.e. a natural number) in the range 0000 . . . 9999. 
     function IsPin (S : in String) return Boolean is
-      (S'Length = 4 and Index_Non_Blank (S) /= 0 and (for all I in S'Range 
-            => S(I) /= ' ' and S(I) /= Ada.Characters.Latin_1.NUL) and IsNumber(S)); 
+      (S' Length = 4 and
+               (for all I in S'Range => S(I) >= '0' and S(I) <= '9')); 
 
     -- check if the string is a valid operator
     function IsValidOperator(S : in String) return Boolean is
@@ -189,7 +179,7 @@ private
     function IsValidVarName(S : in String) return Boolean is
         (S'Length <= VariableStore.Max_Variable_Length and S'Length > 0 
         and Index_Non_Blank (S) /= 0 and (for all I in S'Range 
-            => S(I) /= ' ' and S(I) /= Ada.Characters.Latin_1.NUL));
+            => (S(I) /= ' ' and S(I) /= Ada.Characters.Latin_1.NUL)));
 
     -- check if the string is a valid command for the calc
     function IsValidCommand (S : in String) return Boolean is

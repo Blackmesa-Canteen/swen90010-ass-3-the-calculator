@@ -189,7 +189,8 @@ begin
                      if (CC.IsLocked(C)) then
                         Put_Line("already locked!");
                      else
-                        CC.Lock(C, ArgumentString);
+                        pragma Assert(CC.IsPin(ArgumentString) = True);
+                        CC.Lock(C, PIN.From_String(ArgumentString));
                      end if;
                      
                   else
@@ -197,7 +198,8 @@ begin
                      if not CC.IsLocked(C) then
                         Put_Line("already unlocked!");
                      else
-                        CC.UnLock(C, ArgumentString);
+                        pragma Assert(CC.IsPin(ArgumentString) = True);
+                        CC.Unlock(C, PIN.From_String(ArgumentString));
                      end if;
                   end if;
                end if;
