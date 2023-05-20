@@ -1,7 +1,7 @@
 package body MyCalculator with SPARK_Mode is
 
     -- Init the calc
-    procedure Init(C : out MyCalculator; VarDb : in VariableStore.Database ;MasterPINString : in String) is
+    procedure Init(C : out MyCalculator; MasterPINString : in String) is
     begin
         -- init master pin
         C.MasterPIN := PIN.From_String(MasterPINString);
@@ -10,9 +10,6 @@ package body MyCalculator with SPARK_Mode is
         C.size := 0;
         -- init stack array
         C.storage := (others => 0);
-        
-        -- init variable storage
-        c.VariableDB := VarDb;
 
         -- default is locked
         C.isLocked := True;
@@ -208,17 +205,16 @@ package body MyCalculator with SPARK_Mode is
 
     -- For a string var, the procedure loads the value stored 
     -- in variable var and pushes it onto the stack.
-    procedure LoadVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable) is
+    procedure LoadVar(C : in out MyCalculator; VarDb : in VariableStore.Database; Var : in VariableStore.Variable) is
     begin
         declare
             Num : Item;
         begin
-            Var := VariableStore.From_String(VarString);
-            if VariableStore.Has_Variable(C.VariableDB, Var) then
-                Num := VariableStore.Get(C.VariableDB, Var);
+            if VariableStore.Has_Variable(VarDb, Var) then
+                Num := VariableStore.Get(VarDb, Var);
                 PushNumber(C, Num);
             else
-                Put_Line("Variable " & VarString & " is undefined in stack.");
+                Put_Line("Variable is undefined in stack.");
             end if;
         end;
      
@@ -226,18 +222,16 @@ package body MyCalculator with SPARK_Mode is
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
-    procedure StoreVar(C : in out MyCalculator; Var : in VariableStore.Variable) is
+    procedure StoreVar(C : in out MyCalculator; VarDb : in out VariableStore.Database; Var : in VariableStore.Variable) is
     begin
         declare
             Num : Item;
         begin
-            if (VariableStore.Length(C.VariableDB) < VariableStore.Max_Entries or VariableStore.Has_Variable(C.VariableDB,Var)) then
+            if (VariableStore.Length(VarDb) < VariableStore.Max_Entries or VariableStore.Has_Variable(VarDb,Var)) then
                 -- pop the value from the top of the stack
                 PopNumber(C, Num);
-
-                pragma Assert(VariableStore.Length(C.VariableDB) < VariableStore.Max_Entries or VariableStore.Has_Variable(C.VariableDB,Var));
                 -- store the value into variable var
-                VariableStore.Put(C.VariableDB, Var, Num);
+                VariableStore.Put(VarDb, Var, Num);
             else
                 Put_Line("Varable store is full.");
             end if;
@@ -246,17 +240,11 @@ package body MyCalculator with SPARK_Mode is
     end StoreVar;
 
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
-    procedure RemoveVar(C : in out MyCalculator; VarString: String; Var : out VariableStore.Variable) is 
+    procedure RemoveVar(C : in MyCalculator; VarDb : in out VariableStore.Database; Var : in VariableStore.Variable) is 
     begin
-        declare
-            V : VariableStore.Variable;
-        begin
-            V := VariableStore.From_String(VarString);
-            Var := V;
-            -- remove the variable
-            if VariableStore.Has_Variable(C.VariableDB, V) then
-                VariableStore.Remove(C.VariableDB, V);
-            end if;
-        end;
+        -- remove the variable
+        if VariableStore.Has_Variable(VarDb, Var) then
+            VariableStore.Remove(VarDb, Var);
+        end if;
     end RemoveVar;
 end MyCalculator;

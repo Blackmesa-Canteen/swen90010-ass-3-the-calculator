@@ -52,7 +52,7 @@ begin
    end if;
 
    VariableStore.Init(VarDb);
-   CC.Init(C, VarDb, MyCommandLine.Argument(1));
+   CC.Init(C, MyCommandLine.Argument(1));
 
    -- the main loop of the calculator
    loop
@@ -163,7 +163,7 @@ begin
                   end;
                elsif Lines.To_String(Command) = "list" then
                   -- list the variable storage
-                  VariableStore.Print(CC.GetVarDb(C));
+                  VariableStore.Print(VarDb);
                else
                   -- other undefined command
                   Put_Line("Syntex_Exception: Unrecognized command!");
@@ -229,7 +229,7 @@ begin
                   elsif Lines.To_String(Command) = "load" then
                      -- load the variable
                      declare
-                           VarOut : VariableStore.Variable;
+                           Var : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
@@ -238,10 +238,8 @@ begin
                         elsif CC.Size(C) >= MAX_STACK_SIZE then
                            Put_Line("Stack_Exception: Stack is full!");
                         else
-                           CC.LoadVar(C, ArgumentString, VarOut);
-                           if not VariableStore.Has_Variable(CC.GetVarDb(C), VarOut) then
-                              Put_Line("Var_Exception: VarOut is not in the database!");
-                           end if;       
+                           Var := VariableStore.From_String(ArgumentString);
+                           CC.LoadVar(C, VarDb, Var);  
                         end if;
                      end;
 
@@ -259,23 +257,22 @@ begin
                         else
                            Var := VariableStore.From_String(ArgumentString);
                            pragma Assert (CC.IsValidVarName(ArgumentString));
-                           CC.StoreVar(C, Var);
+                           CC.StoreVar(C, VarDb, Var);
                         end if;
                      end;
 
                   elsif Lines.To_String(Command) = "remove" then
                      -- remove the variable
                      declare
-                           VarOut : VariableStore.Variable;
+                           Var : VariableStore.Variable;
                         begin
                         -- check the variable is valid or not
                         if not CC.IsValidVarName(ArgumentString) then
                            Put_Line("Var_Exception: Variable name is invalid.");
                         else
-                           CC.removeVar(C, ArgumentString, VarOut);
-                           if VariableStore.Has_Variable(CC.GetVarDb(C), VarOut) then
-                              Put_Line("Var_Exception: VarOut should not in database!");
-                           end if;   
+                           Var := VariableStore.From_String(ArgumentString);
+                           pragma Assert (CC.IsValidVarName(ArgumentString));
+                           CC.removeVar(C, VarDb, Var);
                         end if;
                      end;
                   else

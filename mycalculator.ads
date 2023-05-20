@@ -18,7 +18,7 @@ package MyCalculator with SPARK_Mode is
     ------------------- Public Procedures -------------------
     -- initializes the calculator with the given master PIN.
 
-    procedure Init(C : out MyCalculator; VarDb : in VariableStore.Database ;MasterPINString : in String) with
+    procedure Init(C : out MyCalculator; MasterPINString : in String) with
         -- 1. pin is valid;
         Pre => IsPin(MasterPINString),
         -- 1. stack is empty; 2. pin is set to the given pin; 3. calculator is locked.
@@ -78,9 +78,9 @@ package MyCalculator with SPARK_Mode is
 
     -- For a string var, the procedure loads the value stored 
     -- in variable var and pushes it onto the stack.
-    procedure LoadVar(C : in out MyCalculator; VarString: in String; Var : out VariableStore.Variable) with
-        Pre => IsLocked(C) = False and IsValidVarName(VarString) and Size(C) < Max_Size,
-        Post => (Size(C) = Size(C'Old) + 1 and Storage(C, Size(C)) = VariableStore.Get(GetVarDb(C), Var)
+    procedure LoadVar(C : in out MyCalculator; VarDb : in VariableStore.Database; Var : in VariableStore.Variable) with
+        Pre => IsLocked(C) = False and Size(C) < Max_Size,
+        Post => (Size(C) = Size(C'Old) + 1 and Storage(C, Size(C)) = VariableStore.Get(VarDb, Var)
             and (for all I in 1..Size(C'Old) => Storage(C, I) = Storage(C'Old, I)) and IsLocked(C) = IsLocked(C'Old))
             -- if variable not found, then the stack remains unchanged
             or (Size(C) = Size(C'Old) 
@@ -90,12 +90,12 @@ package MyCalculator with SPARK_Mode is
 
     -- pops the value from the top of the stack and stores it 
     -- into variable var, defining that variable if it is not already defined.
-    procedure StoreVar(C : in out MyCalculator; Var : in VariableStore.Variable) with
+    procedure StoreVar(C : in out MyCalculator; VarDb: in out VariableStore.Database; Var : in VariableStore.Variable) with
         Pre => IsLocked(C) = False and Size(C) > 0,
         Post => 
             -- 1. if Successfully stored, then stack size decreased;
             (((Size(C) = Size(C'Old) - 1 and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J))
-            and VariableStore.Has_Variable(GetVarDb(C), Var)))
+            and VariableStore.Has_Variable(VarDb, Var)))
             and IsLocked(C) = IsLocked(C'Old))
             -- 2. if variable storage is full, do nothing
             or (
@@ -104,11 +104,11 @@ package MyCalculator with SPARK_Mode is
             );
             
     -- makes variable var undefined (i.e. it will not be printed by subsequent “list” commands).
-    procedure RemoveVar(C : in out MyCalculator; VarString: String; Var : out VariableStore.Variable) with
-        Pre => IsLocked(C) = False and then IsValidVarName(VarString),
+    procedure RemoveVar(C : in MyCalculator; VarDb : in out VariableStore.Database; Var : in VariableStore.Variable) with
+        Pre => IsLocked(C) = False,
         Post => (Size(C) = Size(C'Old) 
             and (for all J in 1..Max_Size => Storage(C,J) = Storage(C'Old,J)) 
-            and not VariableStore.Has_Variable(GetVarDb(C), Var))
+            and not VariableStore.Has_Variable(VarDb, Var))
             and IsLocked(C) = IsLocked(C'Old);
 
     ------------------- Utils -------------------
@@ -125,9 +125,6 @@ package MyCalculator with SPARK_Mode is
 
     -- get the pin of the calculator
     function GetPin(C : in MyCalculator) return PIN.PIN;
-
-    -- get var db
-    function GetVarDb(C : in MyCalculator) return VariableStore.Database;
    
     -- check if the string is a valid pin, is a 4-digit string of 
     -- non-whitespace characters that represents a non-negative number 
@@ -152,7 +149,6 @@ private
         masterPin : PIN.PIN;
         storage : StorageArray;
         size : Integer range 0..Max_Size;
-        VariableDB : VariableStore.Database;
     end record;
 
     ------------------- Util implementation-------------------
@@ -196,9 +192,5 @@ private
     -- get tgh pin of the calculator
     function GetPin(C : in MyCalculator) return PIN.PIN is
         (C.masterPin);
-
-    -- get var db
-    function GetVarDb(C : in MyCalculator) return VariableStore.Database is
-        (C.VariableDB);
 
 end MyCalculator;
