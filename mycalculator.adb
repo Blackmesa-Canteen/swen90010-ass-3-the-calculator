@@ -40,12 +40,6 @@ package body MyCalculator with SPARK_Mode is
         C.isLocked := True;
     end Lock;
 
-    -- Get whether is locked or not
-    function IsLocked(C : in MyCalculator) return Boolean is
-    begin
-        return C.isLocked;
-    end IsLocked;
-
     -- Push a number in
     procedure PushNumber(C : in out MyCalculator; NumIn : in Item) is
     begin

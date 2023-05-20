@@ -147,7 +147,7 @@ package MyCalculator with SPARK_Mode is
 private
     type StorageArray is array (Integer range 1..Max_Size) of Item;
     type MyCalculator is record
-        isLocked : Boolean := False;
+        isLocked : Boolean;
         masterPin : PIN.PIN;
         storage : StorageArray;
         size : Integer range 0..Max_Size;
@@ -162,6 +162,10 @@ private
     -- helper function for get the value of the stack storage
     function Storage(C : in MyCalculator; Pos : in Integer) return Item is
         (C.storage(Pos));
+
+    -- Get whether is locked or not
+    function IsLocked(C : in MyCalculator) return Boolean is
+        (C.isLocked);
 
     -- helper function for checking if the string is a valid number
     function IsNumber (S: in String) return Boolean is
