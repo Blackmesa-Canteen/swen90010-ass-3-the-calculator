@@ -7,6 +7,7 @@ with Ada.Containers.Formal_Ordered_Maps;
 with Ada.Containers; use Ada.Containers;
 with Ada.Strings.Fixed;
 use Ada.Strings.Fixed;
+with Ada.Characters.Latin_1;
 generic
     Max_Size : Positive;
 
@@ -175,7 +176,8 @@ private
     -- non-whitespace characters that represents a non-negative number 
     -- (i.e. a natural number) in the range 0000 . . . 9999. 
     function IsPin (S : in String) return Boolean is
-      (S'Length = 4 and Index_Non_Blank (S) /= 0 and IsNumber(S)); 
+      (S'Length = 4 and Index_Non_Blank (S) /= 0 and (for all I in S'Range 
+            => S(I) /= ' ' and S(I) /= Ada.Characters.Latin_1.NUL) and IsNumber(S)); 
 
     -- check if the string is a valid operator
     function IsValidOperator(S : in String) return Boolean is
@@ -185,8 +187,9 @@ private
     -- string of non-whitespace characters, and names longer 
     -- than 1024 characters are invalid.
     function IsValidVarName(S : in String) return Boolean is
-        (S'Length <= VariableStore.Max_Variable_Length and then (for all I in S'Range 
-            => S(I) /= ' '));
+        (S'Length <= VariableStore.Max_Variable_Length and S'Length > 0 
+        and Index_Non_Blank (S) /= 0 and (for all I in S'Range 
+            => S(I) /= ' ' and S(I) /= Ada.Characters.Latin_1.NUL));
 
     -- check if the string is a valid command for the calc
     function IsValidCommand (S : in String) return Boolean is

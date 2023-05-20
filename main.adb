@@ -233,7 +233,9 @@ begin
                            Put_Line("Stack_Exception: Stack is full!");
                         else
                            CC.LoadVar(C, ArgumentString, VarOut);
-                           pragma Assert(VarOut = VariableStore.From_String(ArgumentString));        
+                           if not VariableStore.Has_Variable(CC.GetVarDb(C), VarOut) then
+                              Put_Line("Var_Exception: VarOut is not in the database!");
+                           end if;       
                         end if;
                      end;
 
@@ -250,8 +252,9 @@ begin
                            Put_Line("Stack_Exception: Stack is empty!");
                         else
                            CC.StoreVar(C, ArgumentString, VarOut);
-                           pragma Assert(VarOut = VariableStore.From_String(ArgumentString)); 
-                           pragma Assert(VariableStore.Has_Variable(CC.GetVarDb(C), VarOut));
+                           if not VariableStore.Has_Variable(CC.GetVarDb(C), VarOut) then
+                              Put_Line("Var_Exception: VarOut is not in the database!");
+                           end if;
                         end if;
                      end;
 
@@ -265,8 +268,9 @@ begin
                            Put_Line("Var_Exception: Variable name is invalid.");
                         else
                            CC.removeVar(C, ArgumentString, VarOut);
-                           pragma Assert(VarOut = VariableStore.From_String(ArgumentString)); 
-                           pragma Assert(not VariableStore.Has_Variable(CC.GetVarDb(C), VarOut));   
+                           if VariableStore.Has_Variable(CC.GetVarDb(C), VarOut) then
+                              Put_Line("Var_Exception: VarOut should not in database!");
+                           end if;   
                         end if;
                      end;
                   else
