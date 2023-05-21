@@ -91,6 +91,7 @@ begin
          Put_Line("Syntex_Exception: Do not provide empty input !");
          return;
       end if;
+         
       -- Check whether user input includes 'NUL'   
       for c of Lines.To_String(S) loop
           if c = Ada.Characters.Latin_1.NUL then
@@ -99,6 +100,12 @@ begin
           end if;
       end loop;
       
+      -- Check whether user input ends with a SPACE to make sure it can be correctly utilised by the string tokeniser   
+      if Lines.To_String(S)(Lines.To_String(S)'Last) = ' ' then
+          Put_Line("Syntex_Exception: Please do not end your input with a SPACE!");
+          return;
+      end if;
+         
       -- validate input: length
       if Lines.Length(S) > MAX_LINE_LENGTH then
         Put_Line("Syntex_Exception: Input too long!");

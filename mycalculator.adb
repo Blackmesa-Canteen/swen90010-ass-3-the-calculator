@@ -71,7 +71,9 @@ package body MyCalculator with SPARK_Mode is
                 PopNumber(C, Num1);
                 pragma Assert (not IsLocked(C));
                 PopNumber(C, Num2);
-
+                if Num1 > Max_Integer or Num2 > Max_Integer or Num1 < Min_Integer or Num2 < Min_Integer then
+                    Put_Line("hello");
+                end if;
                  -- compute the corresponding arithmetic operation on them
                 if Operator = "+" then
                      -- check addition overflow
