@@ -74,6 +74,16 @@
 -- the prove, on line 74 of mycalculator.ads postcondition of (Size(C) = Size(C'Old)) is provided indicating that some of the times the stack size should remain unchanged. This postcondition was not
 -- complained by the SPARK prover, thus we believe that this security property is supported by our implementation.
 
+-- 9. ADDITIONAL: When performing any arithmetic operation, there should be at least two elements already on the stack currently 
+
+-- For this security property, it was proved on line 71 with a precondition of Size(C) >= 2, SPARK prover did not complain about this precondition and thus this property can be proved. Meanwhile, to strengthen the
+-- prove, before performing any operations, in main.adb, we've placed judgement on it to check the stack size, if the user attempt to do such a behaviour, the system would stop them and return an error message printed
+-- out in the terminal.
+
+-- 10. ADDITIONAL: When performing "load" and "store" operation, the variable name should be a valid one.
+
+-- For this security property, it was checked by the postcondition in line 78 and 90 in mycalculator.ads (commands can be seen there). SPARK prover did not complain about these postconditions, thus we believe
+-- that this security property is proved and supported by our implementation.
 
 pragma SPARK_Mode (On);
 
