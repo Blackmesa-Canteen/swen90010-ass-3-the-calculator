@@ -1,3 +1,80 @@
+-- Author
+-- Xiaotian Li, Student ID: 1141181
+-- Junrong Wu, Student ID: 1310531
+
+-- The Security Property that we have been proved for this project is as follows:
+
+-- 1. The arithmetic operations ("+", "-", "*", ""), load, store, remove, and lock operations can 
+-- only ever be performed when the calculator is in the unlocked state. 
+
+-- Since in our implementation, all the arithmetic operations were taken care of and encapsulated with in the 
+-- procedure of PerformOperation() (specifications of it can be found on line 69 of mycalculator.ads). Therefore,
+-- it would be easy for us to check whether this security property is satisfied. We did the security check simply
+-- by including a precondition in the procedure specification of that method -> "Pre => isLocked(C) = False", which
+-- implies a precondition of before performing any arithmetic operations (calling that procedure), this precondition
+-- should always be fulfilled first. After we running this precondition through the SPARK prover, no complaint was made
+-- by the SPARK prover, thus, we can believe that this security property has been satisfied. Meanwhile, before actually
+-- calling this method in main.adb, additional check has been performed checking whether the calculator is currently locked
+-- or not, if it is locked, exception would be shown through a print out manner indicating it as an invalid operation to do now.
+-- Finally, before the procedure was actually called, assertion was placed before it to make sure that the calculator is
+-- actually unlocked before performing calculations.
+
+-- 2. The Unlock operation can only ever be performed when the calculator is in the locked state and vice versa.
+
+-- This security property was also proved through a manner of putting preconditions of isLocked(C) = True and isLocked(C) = False 
+-- before the Unlock() and Lock() procedure specified in the mycalculator.ads at line 30 and 39 respectively. 
+-- Same as the security property 1, no complain was made by the SPARK prover indicating the security property to be true. 
+-- To strength the prove, we've also put judgements before these two methods before they are actually called, if the calculator was
+-- already locked/unlocked when calling Lock()/Unlock() method, error message would be printed out in the terminal stopping the user
+-- from approaching to attempt it again.
+
+-- 3. The Lock operation, when it is performed, should update the master PIN with the new PIN that is supplied.
+
+-- This security property was proved through a manner of putting postcondition of PIN."="(PinIn, GetPin(C)) after the Lock() procedure
+-- is performed specified in the mycalculator.ads at line 43. Same as the two previous properties, no complain was made by the SPARK prover
+-- indicating that this security property to be true. To strength the prove, assertion of pragma Assert(CC.IsPin(ArgumentString) = True) was made
+-- before updating the PIN in the system making sure that the provided update PIN is a valid PIN.
+
+-- 4. ADDITIONAL: When the program is started, the provided command line of the initial PIN for the calculator should not be empty, including NUL or not following the PIN format.
+
+-- This security property might be a property which is out-of-scope here, however it is an important property that might often be ignored.
+-- This property was not directly proved through the SPARK prover since it does not have the capability to do so, however, if an invalid, NUL included or empty
+-- PIN was provided when the program first starts, it would be a severe problem harming the further run of the system. This property was guranteed
+-- by adding pre-checks on the command line arguments before the program runs, it can be found at the very beginning section of the main.adb file,
+-- whenever an invalid PIN was provided initially, the program would be refusing to execute, and returning the correct use to the user through the command line argument.
+
+-- 5. ADDITIONAL: User Input should not be empty, full of spaces, including 'NUL' characters, end with spaces or exceeding the maximum length
+
+-- Again, this is another security property like property 4 does, which is an issue that often be ignored however bringing severe issues to the actual
+-- running of the system, especailly for this system while a string tokeniser is taken in place to deal with the user input, the user input should be strictly
+-- checked and make sure its a valid one that can be used by the system. For the empty input and 'NUL' character included inputs, it was directly picked up by the 
+-- SPARK prover automatically with counterexamples of: 1. input'First >= input'Last 2. input'First = 0, input'Last = 4 (others => 'NUL'). While for the input full of
+-- spaces and end with spaces, it was found by manual testing after SPARK has rised a concern on the input format as we just mentioned, SPARK has provided us with 
+-- a counter example that after string tokenising, the token length was actually shrinked by 1 or directly shown to be zero it might be due to the implementation of the string tokeniser, 
+-- that it could not handle inputs with more than one spaces included, since it seperates tokens with spaces. Finally, for the exceeding maximum length, it was according to the specification
+-- of the assignment with a maximum input length limited. This property was proved by putting pre-checks before the user input is actually used by the main.adb and starts
+-- tokenising, if either of these scenarios takes in place, the system would consider it as an invalid input and stop the program from further processing.
+
+-- 6. ADDITIONAL: Overall correctness of the stack. When pushing a number to the stack (performing the "push" operator), the stack should not be full, the pushed number should sit on the top of the stack, 
+-- other elements within the stack should remain unchanged and the size of the stack should be increased.
+
+-- For this security property, it was obtained from the common properties and understanding of a stack and any array like elements in programming. It was proved through
+-- the preconditions and postconditions specified in the mycalculator.ads at line 46. SPARK prover has no complain on these conditions, meaning that this property is correct and supported.
+
+-- 7. ADDITIONAL: Overall correctness of the stack. When popping a number from the stack (performing the "pop" operator), the stack should not be empty, the popped number should be popped from the top of the stack, 
+-- other elements within the stack should remain unchanged and the size of the stack should be decreased.
+
+-- For this security property, it was obtained from the common properties and understanding of a stack and any array like elements in programming. It was proved through
+-- the preconditions and postconditions specified in the mycalculator.ads at line 56. SPARK prover has no complain on these conditions, meaning that this property is correct and supported.
+
+-- 8. ADDITIONAL: When overflow takes in place during arithmetic operation, the stack should remain unchanged
+
+-- For this security property, it was automatically picked up by the SPARK prover through counter examples indicates that overflows might be taken in place during calculations. Therefore, we've performed judgement
+-- in the implementation around line 130 to line 160 in mycalculator.adb, when overflow takes in place, the system would return an error from the terminal indicating the issue. Meanwhile, to strengthen
+-- the prove, on line 74 of mycalculator.ads postcondition of (Size(C) = Size(C'Old)) is provided indicating that some of the times the stack size should remain unchanged. This postcondition was not
+-- complained by the SPARK prover, thus we believe that this security property is supported by our implementation.
+
+
 pragma SPARK_Mode (On);
 
 with StringToInteger;
