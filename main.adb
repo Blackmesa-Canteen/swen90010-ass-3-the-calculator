@@ -7,9 +7,8 @@
 -- 1. The arithmetic operations ("+", "-", "*", ""), load, store, remove, and lock operations can 
 -- only ever be performed when the calculator is in the unlocked state. 
 
--- Since in our implementation, all the arithmetic operations were taken care of and encapsulated with in the 
--- procedure of PerformOperation() (specifications of it can be found on line 69 of mycalculator.ads). Therefore,
--- it would be easy for us to check whether this security property is satisfied. We did the security check simply
+-- In our implementation, all the arithmetic operations were taken care of and encapsulated with in the 
+-- procedure of PerformOperation() (specifications of it can be found on line 69 of mycalculator.ads). We did the security check simply
 -- by including a precondition in the procedure specification of that method -> "Pre => isLocked(C) = False", which
 -- implies a precondition of before performing any arithmetic operations (calling that procedure), this precondition
 -- should always be fulfilled first. After we running this precondition through the SPARK prover, no complaint was made
@@ -21,9 +20,8 @@
 
 -- 2. The Unlock operation can only ever be performed when the calculator is in the locked state and vice versa.
 
--- This security property was also proved through a manner of putting preconditions of isLocked(C) = True and isLocked(C) = False 
--- before the Unlock() and Lock() procedure specified in the mycalculator.ads at line 30 and 39 respectively. 
--- Same as the security property 1, no complain was made by the SPARK prover indicating the security property to be true. 
+-- This security property was also proved through a manner of putting preconditions before the Unlock() and Lock() procedure specified in the mycalculator.ads
+-- No complain was made by the SPARK prover indicating the security property to be true. 
 -- To strength the prove, we've also put judgements before these two methods before they are actually called, if the calculator was
 -- already locked/unlocked when calling Lock()/Unlock() method, error message would be printed out in the terminal stopping the user
 -- from approaching to attempt it again.
@@ -31,7 +29,7 @@
 -- 3. The Lock operation, when it is performed, should update the master PIN with the new PIN that is supplied.
 
 -- This security property was proved through a manner of putting postcondition of PIN."="(PinIn, GetPin(C)) after the Lock() procedure
--- is performed specified in the mycalculator.ads at line 43. Same as the two previous properties, no complain was made by the SPARK prover
+-- is performed specified in the mycalculator.ads. Same as the two previous properties, no complain was made by the SPARK prover
 -- indicating that this security property to be true. To strength the prove, assertion of pragma Assert(CC.IsPin(ArgumentString) = True) was made
 -- before updating the PIN in the system making sure that the provided update PIN is a valid PIN.
 
@@ -45,8 +43,7 @@
 
 -- 5. ADDITIONAL: User Input should not be empty, full of spaces, including 'NUL' characters, end with spaces or exceeding the maximum length
 
--- Again, this is another security property like property 4 does, which is an issue that often be ignored however bringing severe issues to the actual
--- running of the system, especailly for this system while a string tokeniser is taken in place to deal with the user input, the user input should be strictly
+-- The string tokeniser is taken in place to deal with the user input in the system, thus the user input should be strictly
 -- checked and make sure its a valid one that can be used by the system. For the empty input and 'NUL' character included inputs, it was directly picked up by the 
 -- SPARK prover automatically with counterexamples of: 1. input'First >= input'Last 2. input'First = 0, input'Last = 4 (others => 'NUL'). While for the input full of
 -- spaces and end with spaces, it was found by manual testing after SPARK has rised a concern on the input format as we just mentioned, SPARK has provided us with 
