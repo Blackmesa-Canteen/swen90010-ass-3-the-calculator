@@ -56,13 +56,13 @@
 -- other elements within the stack should remain unchanged and the size of the stack should be increased.
 
 -- For this security property, it was obtained from the common properties and understanding of a stack and any array like elements in programming. It was proved through
--- the preconditions and postconditions specified in the mycalculator.ads at line 46. SPARK prover has no complain on these conditions, meaning that this property is correct and supported.
+-- the preconditions and postconditions specified in the mycalculator.ads on the PushNumber() procedure. SPARK prover has no complain on these conditions, meaning that this property is correct and supported.
 
 -- 7. ADDITIONAL: Overall correctness of the stack. When popping a number from the stack (performing the "pop" operator), the stack should not be empty, the popped number should be popped from the top of the stack, 
 -- other elements within the stack should remain unchanged and the size of the stack should be decreased.
 
 -- For this security property, it was obtained from the common properties and understanding of a stack and any array like elements in programming. It was proved through
--- the preconditions and postconditions specified in the mycalculator.ads at line 56. SPARK prover has no complain on these conditions, meaning that this property is correct and supported.
+-- the preconditions and postconditions specified in the mycalculator.ads on the PopNumber() procedure. SPARK prover has no complain on these conditions, meaning that this property is correct and supported.
 
 -- 8. ADDITIONAL: When overflow takes in place during arithmetic operation, the stack should remain unchanged
 
