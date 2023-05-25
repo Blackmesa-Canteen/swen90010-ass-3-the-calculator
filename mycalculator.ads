@@ -14,7 +14,20 @@ generic
 package MyCalculator with SPARK_Mode is
     type MyCalculator is private;
     subtype Item is Integer;
-
+   
+    procedure MultiplyBothNegative(Num1: in Integer; Num2: in Integer; Result: out Integer) with
+        Pre => (Num1 < 0 and Num2 < 0) and then (Num1 /= Integer'First and Num2 /= Integer'First) and then (-Num1) <= Integer'Last / (-Num2),
+        Post => Result = Num1 * Num2;
+   
+    procedure MultiplyBothPositive(Num1: in Integer; Num2: in Integer; Result: out Integer) with
+        Pre => (Num1 > 0 and Num2 > 0) and then Num1 <= Integer'Last / Num2,
+        Post => Result = Num1 * Num2;
+   
+    procedure MultiplyPositiveNegative(Num1: in Integer; Num2: in Integer; Result: out Integer) with
+     Pre => ((Num1 < 0 and Num2 > 0) and then (Num1 >= (Integer'First + 1) / Num2)) 
+            or ((Num1 > 0 and Num2 < 0) and then (Num2 >= (Integer'First + 1) / Num1)),
+        Post => Result = Num1 * Num2;
+   
     ------------------- Public Procedures -------------------
     -- initializes the calculator with the given master PIN.
 

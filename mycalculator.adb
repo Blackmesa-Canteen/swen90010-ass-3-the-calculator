@@ -1,5 +1,20 @@
 package body MyCalculator with SPARK_Mode is
-
+    
+    procedure MultiplyBothPositive(Num1: in Integer; Num2: in Integer; Result: out Integer) is
+        begin
+        Result := Num1 * Num2;
+    end MultiplyBothPositive;
+   
+    procedure MultiplyBothNegative(Num1: in Integer; Num2: in Integer; Result: out Integer) is
+        begin
+        Result := Num1 * Num2;
+    end MultiplyBothNegative;
+    
+    procedure MultiplyPositiveNegative(Num1: in Integer; Num2: in Integer; Result: out Integer) is
+        begin
+        Result := Num1 * Num2;
+    end MultiplyPositiveNegative;
+   
     -- Init the calc
     procedure Init(C : out MyCalculator; MasterPINString : in String) is
     begin
@@ -62,6 +77,7 @@ package body MyCalculator with SPARK_Mode is
             declare 
                 Num1 : Item;
                 Num2 : Item;
+                Result: Item;
                 Max_Integer : constant Integer := Integer'Last;
                 Min_Integer : constant Integer := Integer'First;
                 Temp_R : Long_Long_Integer;
@@ -136,32 +152,38 @@ package body MyCalculator with SPARK_Mode is
                                 pragma Assert (not IsLocked(C));
                                 PushNumber(C, 0);
                             elsif (IsProductPositive) then
-                                if ((Num1 > Max_Integer / Num2) and (Num1 > 0 and Num2 > 0)) 
-                                or ((Num1 < Max_Integer / Num2) and (Num1 < 0 and Num2 < 0)) then
+                                if ((Num1 > 0 and Num2 > 0) and then Num1 <= Max_Integer / Num2) then
+                                    pragma Assert (not IsLocked(C));
+                                    MultiplyBothPositive(Num1, Num2, Result);
+                                    PushNumber(C, Result);
+                                elsif ((Num1 < 0 and Num2 < 0) and then (Num1 /= Min_Integer and Num2 /= Min_Integer) and then (-Num1) <= Max_Integer / (-Num2)) then
+                                    pragma Assert (not IsLocked(C));
+                                    MultiplyBothNegative(Num1, Num2, Result);
+                                    PushNumber(C, Result);
+                                else
                                     -- rollback the stack, show error info
                                     pragma Assert (not IsLocked(C));
                                     PushNumber(C, Num2);
                                     pragma Assert (not IsLocked(C));
                                     PushNumber(C, Num1);
                                     Put_Line("Multiplication overflow.");
-                                else
-                                    pragma Assert (not IsLocked(C));
-                                    PushNumber(C, Num1 * Num2);
+
                                 end if;  
                             elsif (IsProductNegative) then
-                                if (Num1 < (Min_Integer + 1) / Num2) 
-                                or (Num2 < (Min_Integer + 1) / Num1)
-                                or (Num1 = -1 and Num2 = Max_Integer)
-                                or (Num2 = -1 and Num1 = Max_Integer) then
+                                if ((Num1 >= (Min_Integer + 1) / Num2) and (Num1 < 0 and Num2 > 0)) 
+                                or ((Num2 >= (Min_Integer + 1) / Num1) and (Num1 > 0 and Num2 < 0)) then
+                                    pragma Assert (not IsLocked(C));
+                                    MultiplyPositiveNegative(Num1,Num2,Result);
+                                    PushNumber(C, Result);
+                                else
+
                                     -- rollback the stack, show error info
                                     pragma Assert (not IsLocked(C));
                                     PushNumber(C, Num2);
                                     pragma Assert (not IsLocked(C));
                                     PushNumber(C, Num1);
                                     Put_Line("Multiplication overflow.");
-                                else
-                                    pragma Assert (not IsLocked(C));
-                                    PushNumber(C, Num1 * Num2);
+
                                 end if;
                             end if;
                         end;
