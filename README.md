@@ -2,9 +2,9 @@
 ## Intro
 Full mark project of Ada calculator. If it is helpful, please give us a star. While refering to this assignment, make sure you follow the regulation from the Unimelb:
 
-```
+*
 By submitting work for assessment I hereby declare that I understand the University’s policy on academic integrity and statement on the use of artificial intelligence software. In accordance with these documents, I declare that the work submitted is original and solely my work, and that I have not been assisted by a third party (collusion) apart from where the submitted work is for a designated collaborative task, in which case the individual contributions are indicated. I also declare that I have not used any writing tools or sources without proper acknowledgment (plagiarism). Where the submitted work is a computer program or code, I further declare that any copied code is declared in comments identifying the source at the start of the program or in a header file, that comments inline identify the start and end of the copied code, and that any modifications to code sources elsewhere are commented upon as to the nature of the modification.
-```
+*
 
 ## Description
 The program you have to implement is a command-line utility for performing numerical calculations. It takes input from the terminal (i.e. standard input, aka stdin).
